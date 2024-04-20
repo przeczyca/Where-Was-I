@@ -1,25 +1,23 @@
 import { useCallback, useMemo, useState } from 'react';
 import './App.css'
 import Map, { Layer, Source } from 'react-map-gl';
-import { countiesLayer, statesLayer, highlightCountiesLayer, highlightStatesLayer, selectedStatesLayer, selectedCountiesLayer } from './map-style';
+import { areaLayer, hoverGNIS_IDLayer, selectedGNIS_IDLayer } from './map-style';
 import mapboxgl from 'mapbox-gl';
 
 const token = import.meta.env.VITE_MAPBOX_TOKEN;
+const stateSource = import.meta.env.VITE_STATE_SOURCE;
+const countySource = import.meta.env.VITE_COUNTY_SOURCE;
 
 interface HoverInfo {
   longitude: number;
   latitude: number;
-  countyName: string | undefined;
-  stateName: string;
+  gnis_id: string;
 };
 
 function App() {
   const [mapMode, setMapMode] = useState<string>('states');
   const [hoverInfo, setHoverInfo] = useState<HoverInfo | null>(null);
-  const [selectedStates, setSelectedStates] = useState<Array<number>>([]);
-  const [selectedCounties, setSelectedCounties] = useState<Array<{ countyName: string, stateName: string }>>([]);
-
-  // ToDo: useEffect for getting selectedStatesAndCounties
+  const [selectedGNIS_IDs, setSelectedGNIS_IDs] = useState<Array<string>>([]);
 
   const changeMapMode = () => {
     if (mapMode === 'states') {
@@ -33,58 +31,32 @@ function App() {
   }
 
   const onHover = useCallback((event: mapboxgl.MapMouseEvent & mapboxgl.EventData) => {
-    if (mapMode === 'states') {
-      const state = event.features && event.features[0];
-      setHoverInfo({
-        longitude: event.lngLat.lng,
-        latitude: event.lngLat.lng,
-        countyName: undefined,
-        stateName: state && state.properties.state_name
-      });
-    }
-    else {
-      const county = event.features && event.features[0];
-      setHoverInfo({
-        longitude: event.lngLat.lng,
-        latitude: event.lngLat.lng,
-        countyName: county && county.properties.county_nam,
-        stateName: county && county.properties.state_name
-      })
-    }
+    const area = event.features && event.features[0];
+    setHoverInfo({
+      longitude: event.lngLat.lng,
+      latitude: event.lngLat.lng,
+      gnis_id: area && area.properties.gnis_id
+    });
   }, [mapMode]);
 
   const onClick = (event: mapboxgl.EventData) => {
-    if (mapMode === 'states') {
-      const index = selectedStates.indexOf(event.features[0].properties.state_name);
+    if (event.features[0]) {
+      const index = selectedGNIS_IDs.indexOf(event.features[0].properties.gnis_id);
       if (index > -1) {
-        const newStateSelection = selectedStates.filter(state => state !== event.features[0].properties.state_name);
-        setSelectedStates(newStateSelection);
+        const newGNISSelection = selectedGNIS_IDs.filter(state => state !== event.features[0].properties.gnis_id);
+        setSelectedGNIS_IDs(newGNISSelection);
       }
       else {
-        setSelectedStates([...selectedStates, event.features[0].properties.state_name]);
-      }
-    }
-
-    else if (mapMode === 'counties') {
-      const index = selectedCounties.findIndex((county) => county.stateName === event.features[0].properties.state_name && county.countyName === event.features[0].properties.county_nam);
-      if (index > -1) {
-        const newCountySelection = selectedCounties.filter((county) => county.stateName !== event.features[0].properties.state_name || county.countyName !== event.features[0].properties.county_nam);
-        setSelectedCounties(newCountySelection);
-      }
-      else {
-        setSelectedCounties([...selectedCounties, { stateName: event.features[0].properties.state_name, countyName: event.features[0].properties.county_nam }]);
+        setSelectedGNIS_IDs([...selectedGNIS_IDs, event.features[0].properties.gnis_id]);
       }
     }
   }
 
-  const hoverCounty = (hoverInfo && hoverInfo.countyName) || '';
-  const hoverState = (hoverInfo && hoverInfo.stateName) || '';
+  const hoverArea = (hoverInfo && hoverInfo.gnis_id) || '';
 
-  const countyHoverFilter = useMemo(() => ['all', ['in', 'county_nam', hoverCounty], ['in', 'state_name', hoverState]], [hoverCounty]);
-  const stateHoverFilter = useMemo(() => ['in', 'state_name', hoverState], [hoverState]);
+  const hoverFilter = useMemo(() => ['in', 'gnis_id', hoverArea], [hoverArea]);
 
-  const selectedStateFilter = useMemo(() => ['any', ...selectedStates.map((state) => ['in', 'state_name', state])], [selectedStates]);
-  const selectedCountyFilter = useMemo(() => ['any', ...selectedCounties.map((county) => ['all', ['in', 'county_nam', county.countyName], ['in', 'state_name', county.stateName]])], [selectedCounties]);
+  const selectedGNIS_IDFilter = useMemo(() => ['any', ...selectedGNIS_IDs.map((gnis_id) => ['in', 'gnis_id', gnis_id])], [selectedGNIS_IDs]);
 
   return (
     <div>
@@ -105,16 +77,16 @@ function App() {
       >
         {mapMode === 'states' &&
           <Source type="vector" url='mapbox://przeczyca.cq49tua3'>
-            <Layer {...statesLayer} />
-            <Layer {...highlightStatesLayer} filter={stateHoverFilter} />
-            <Layer {...selectedStatesLayer} filter={selectedStateFilter} />
+            <Layer {...areaLayer} source-layer={stateSource} />
+            <Layer {...hoverGNIS_IDLayer} source-layer={stateSource} filter={hoverFilter} />
+            <Layer {...selectedGNIS_IDLayer} source-layer={stateSource} filter={selectedGNIS_IDFilter} />
           </Source>
         }
         {mapMode === 'counties' &&
           <Source type="vector" url="mapbox://przeczyca.8b30w66c">
-            <Layer {...countiesLayer} />
-            <Layer {...highlightCountiesLayer} filter={countyHoverFilter} />
-            <Layer {...selectedCountiesLayer} filter={selectedCountyFilter} />
+            <Layer {...areaLayer} source-layer={countySource} />
+            <Layer {...hoverGNIS_IDLayer} source-layer={countySource} filter={hoverFilter} />
+            <Layer {...selectedGNIS_IDLayer} source-layer={countySource} filter={selectedGNIS_IDFilter} />
           </Source>
         }
       </Map>
