@@ -33,7 +33,10 @@ function App() {
   }
 
   const saveSelections = () => {
-    console.log(selectedGNIS_IDs);
+    fetch('http://localhost:8080/visited', { method: 'POST', body: JSON.stringify(selectedGNIS_IDs) })
+      .then(response => response.json())
+      .then(data => console.log(data))
+      .catch(error => console.log(error))
   }
 
   const onHover = useCallback((event: mapboxgl.MapMouseEvent & mapboxgl.EventData) => {
