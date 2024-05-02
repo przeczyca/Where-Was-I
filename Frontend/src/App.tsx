@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import './App.css'
-import Map, { Layer, Source } from 'react-map-gl';
+import MapBoxMap, { Layer, Source } from 'react-map-gl';
 import { areaLayer, hoverGNIS_IDLayer, selectedGNIS_IDLayer } from './map-style';
 import mapboxgl from 'mapbox-gl';
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -16,10 +16,16 @@ interface HoverInfo {
   gnis_id: string;
 };
 
+interface SelectedGNIS_ID {
+  gnis_id: string;
+  saved: boolean;
+  action: string;
+}
+
 function App() {
   const [mapMode, setMapMode] = useState<string>('States');
   const [hoverInfo, setHoverInfo] = useState<HoverInfo | null>(null);
-  const [selectedGNIS_IDs, setSelectedGNIS_IDs] = useState<Array<string>>([]);
+  const [selectedGNIS_IDs, setSelectedGNIS_IDs] = useState<Map<string, SelectedGNIS_ID>>(new Map());
 
   const changeMapMode = () => {
     if (mapMode === 'States') {
@@ -33,7 +39,9 @@ function App() {
   }
 
   const saveSelections = () => {
-    fetch('http://localhost:8080/visited', { method: 'POST', body: JSON.stringify(selectedGNIS_IDs) })
+    const arrayOfSelected = Array.from(selectedGNIS_IDs.values());
+    console.log(arrayOfSelected);
+    fetch('http://localhost:8080/visited', { method: 'POST', body: JSON.stringify(arrayOfSelected) })
       .then(response => response.json())
       .then(data => console.log(data))
       .catch(error => console.log(error))
@@ -50,14 +58,25 @@ function App() {
 
   const onClick = (event: mapboxgl.EventData) => {
     if (event.features[0]) {
-      const index = selectedGNIS_IDs.indexOf(event.features[0].properties.gnis_id);
-      if (index > -1) {
-        const newGNISSelection = selectedGNIS_IDs.filter(state => state !== event.features[0].properties.gnis_id);
-        setSelectedGNIS_IDs(newGNISSelection);
+      const gnis = selectedGNIS_IDs.get(event.features[0].properties.gnis_id);
+      const newGNISSelection = new Map(selectedGNIS_IDs);
+      if (gnis) {
+        if (gnis.saved && gnis.action == "selected") {
+          newGNISSelection.delete(gnis.gnis_id);
+          newGNISSelection.set(gnis.gnis_id, { gnis_id: gnis.gnis_id, saved: gnis.saved, action: "deleted" });
+        }
+        else if (gnis.saved && gnis.action == "deleted") {
+          newGNISSelection.delete(gnis.gnis_id);
+          newGNISSelection.set(gnis.gnis_id, { gnis_id: gnis.gnis_id, saved: gnis.saved, action: "selected" });
+        }
+        else if (!gnis.saved && gnis.action == "selected") {
+          newGNISSelection.delete(gnis.gnis_id);
+        }
       }
       else {
-        setSelectedGNIS_IDs([...selectedGNIS_IDs, event.features[0].properties.gnis_id]);
+        newGNISSelection.set(event.features[0].properties.gnis_id, { gnis_id: event.features[0].properties.gnis_id, saved: false, action: "selected" });
       }
+      setSelectedGNIS_IDs(newGNISSelection);
     }
   }
 
@@ -65,11 +84,11 @@ function App() {
 
   const hoverFilter = useMemo(() => ['in', 'gnis_id', hoverArea], [hoverArea]);
 
-  const selectedGNIS_IDFilter = useMemo(() => ['any', ...selectedGNIS_IDs.map((gnis_id) => ['in', 'gnis_id', gnis_id])], [selectedGNIS_IDs]);
+  const selectedGNIS_IDFilter = useMemo(() => ['any', ...Array.from(selectedGNIS_IDs.values()).map((selctedGNIS: SelectedGNIS_ID) => ['in', 'gnis_id', selctedGNIS.gnis_id])], [selectedGNIS_IDs]);
 
   return (
     <div>
-      <Map
+      <MapBoxMap
         mapboxAccessToken={token}
         initialViewState={{
           latitude: 38.88,
@@ -96,7 +115,7 @@ function App() {
             <Layer {...selectedGNIS_IDLayer} source-layer={countySource} filter={selectedGNIS_IDFilter} />
           </Source>
         }
-      </Map>
+      </MapBoxMap>
       <MapButtons mapMode={mapMode} changeMapMode={changeMapMode} saveSelections={saveSelections} />
     </div>
   )
