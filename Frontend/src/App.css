@@ -8,23 +8,6 @@
   height: 100vh;
 }
 
-/*original*/
-.control-panel {
-  position: absolute;
-  top: 0;
-  right: 0;
-  max-width: 320px;
-  background: #fff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  padding: 12px 24px;
-  margin: 20px;
-  font-size: 13px;
-  line-height: 2;
-  color: #6b6b76;
-  text-transform: uppercase;
-  outline: none;
-}
-
 .mapButtonsContainer {
   position: absolute;
   top: 0;
@@ -34,9 +17,17 @@
 
 .mapButton {
   display: block;
-  background: #fff;
-  color: #6b6b76;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   font-size: 13px;
   margin: 5px;
+}
+
+.mapButtonLight {
+  background: #fff;
+  color: #6b6b76;
+}
+
+.mapButtonDark {
+  background: #4e4e4e;
+  color: #fff;
 }

@@ -1,10 +1,13 @@
 import { useCallback, useMemo, useState } from 'react';
 import './App.css'
+import { ThemeContext } from './context'
 import MapBoxMap, { Layer, Source } from 'react-map-gl';
 import { areaLayer, hoverGNIS_IDLayer, selectedGNIS_IDLayer } from './map-style';
 import mapboxgl from 'mapbox-gl';
 import "mapbox-gl/dist/mapbox-gl.css";
 import MapButtons from './MapButtons';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const token = import.meta.env.VITE_MAPBOX_TOKEN;
 const stateSource = import.meta.env.VITE_STATE_SOURCE;
@@ -26,6 +29,7 @@ function App() {
   const [mapMode, setMapMode] = useState<string>('States');
   const [hoverInfo, setHoverInfo] = useState<HoverInfo | null>(null);
   const [selectedGNIS_IDs, setSelectedGNIS_IDs] = useState<Map<string, SelectedGNIS_ID>>(new Map());
+  const [themeValue, setTheme] = useState("dark");
 
   const changeMapMode = () => {
     if (mapMode === 'States') {
@@ -38,13 +42,27 @@ function App() {
     }
   }
 
+  const changeTheme = () => {
+    if (themeValue === "dark") {
+      setTheme("light");
+    }
+    else {
+      setTheme("dark");
+    }
+  }
+
   const saveSelections = () => {
     const arrayOfSelected = Array.from(selectedGNIS_IDs.values());
-    console.log(arrayOfSelected);
     fetch('http://localhost:8080/visited', { method: 'POST', body: JSON.stringify(arrayOfSelected) })
       .then(response => response.json())
       .then(data => console.log(data))
-      .catch(error => console.log(error))
+      .catch(error => {
+        toast.error("Oops, something went wrong :(");
+        console.log(error);
+      });
+
+    //GitHub Pages error toast
+    //toast.error("GitHub Pages is front-end only, no server or database here :(");
   }
 
   const onHover = useCallback((event: mapboxgl.MapMouseEvent & mapboxgl.EventData) => {
@@ -93,10 +111,10 @@ function App() {
         initialViewState={{
           latitude: 38.88,
           longitude: -98,
-          zoom: 3
+          zoom: 2.5
         }}
         style={{ width: "100vw", height: "100vh" }}
-        mapStyle="mapbox://styles/mapbox/light-v9"
+        mapStyle={`mapbox://styles/mapbox/${themeValue}-v9`}
         onClick={onClick}
         onMouseMove={onHover}
         interactiveLayerIds={['counties', 'states']}
@@ -116,7 +134,10 @@ function App() {
           </Source>
         }
       </MapBoxMap>
-      <MapButtons mapMode={mapMode} changeMapMode={changeMapMode} saveSelections={saveSelections} />
+      <ThemeContext.Provider value={themeValue}>
+        <MapButtons mapMode={mapMode} changeMapMode={changeMapMode} saveSelections={saveSelections} changeTheme={changeTheme} />
+      </ThemeContext.Provider>
+      <ToastContainer closeOnClick />
     </div>
   )
 }
