@@ -57,12 +57,12 @@ function App() {
       .then(response => response.json())
       .then(data => console.log(data))
       .catch(error => {
-        toast.error("Oops, something went wrong :(");
+        toast.error("Oops, something went wrong :(", { theme: themeValue });
         console.log(error);
       });
 
     //GitHub Pages error toast
-    //toast.error("GitHub Pages is front-end only, no server or database here :(");
+    //toast.error("GitHub Pages is front-end only, no server or database here :(", {theme: themeValue});
   }
 
   const onHover = useCallback((event: mapboxgl.MapMouseEvent & mapboxgl.EventData) => {
