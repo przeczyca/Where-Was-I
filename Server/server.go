@@ -68,33 +68,53 @@ func (h *visitedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // ToDo: Get all visited locations
 func (h *visitedHandler) GetVisited(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("get visited called")
+	query := "SELECT * FROM visited_locations;"
+
+	rows, err := h.db.Query(query)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	var savedLocations []VisitedLocation
+	for rows.Next() {
+		var location VisitedLocation
+		location.Saved = true
+		location.Action = "selected"
+		if err := rows.Scan(&location.GNIS_ID); err != nil {
+			log.Fatal(err)
+		}
+
+		savedLocations = append(savedLocations, location)
+	}
+
+	jsonBytes, err := json.Marshal(savedLocations)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	w.Write(jsonBytes)
 }
 
-// ToDo: Save all visited locations
+// ToDo: Save selected visited locations
 func (h *visitedHandler) UpdateVisited(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("update visited called")
-
 	var visited []VisitedLocation
 
 	if err := json.NewDecoder(r.Body).Decode(&visited); err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 		InternalServerErrorHandler(w, r)
 		return
-	}
-
-	_, err := fmt.Println(visited)
-	if err != nil {
-		log.Fatal(err)
 	}
 
 	var insertQuery strings.Builder
 	var deleteQuery strings.Builder
 
+	var savedIDs []VisitedLocation
+
 	lastIndex := len(visited) - 1
 	for index, location := range visited {
 		if !location.Saved && location.Action == "selected" {
-			insertQuery.WriteString(fmt.Sprintf("(%s)", location.GNIS_ID))
+			insertQuery.WriteString(fmt.Sprintf("('%s')", location.GNIS_ID))
 			if index < lastIndex {
 				insertQuery.WriteString(", ")
 			}
@@ -103,11 +123,12 @@ func (h *visitedHandler) UpdateVisited(w http.ResponseWriter, r *http.Request) {
 
 	for index, location := range visited {
 		if location.Action == "deleted" {
-			deleteQuery.WriteString(fmt.Sprintf(location.GNIS_ID))
-			fmt.Println(index, lastIndex)
+			deleteQuery.WriteString(fmt.Sprintf("'%s'", location.GNIS_ID))
 			if index < lastIndex {
 				deleteQuery.WriteString(", ")
 			}
+		} else {
+			savedIDs = append(savedIDs, VisitedLocation{location.GNIS_ID, true, "selected"})
 		}
 	}
 
@@ -123,14 +144,12 @@ func (h *visitedHandler) UpdateVisited(w http.ResponseWriter, r *http.Request) {
 		fullQuery.WriteString(deleteQuery.String() + ");")
 	}
 
-	fmt.Println(fullQuery.String())
-
-	_, err = h.db.Query(fullQuery.String())
+	_, err := h.db.Query(fullQuery.String())
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	jsonBytes, err := json.Marshal(visited)
+	jsonBytes, err := json.Marshal(savedIDs)
 	if err != nil {
 		InternalServerErrorHandler(w, r)
 		return

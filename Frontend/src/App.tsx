@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import './App.css'
 import { ThemeContext } from './context'
 import MapBoxMap, { Layer, Source } from 'react-map-gl';
@@ -20,9 +20,9 @@ interface HoverInfo {
 };
 
 interface SelectedGNIS_ID {
-  gnis_id: string;
-  saved: boolean;
-  action: string;
+  GNIS_ID: string;
+  Saved: boolean;
+  Action: string;
 }
 
 function App() {
@@ -51,11 +51,33 @@ function App() {
     }
   }
 
+  useEffect(() => {
+    fetch('http://localhost:8080/visited', { method: 'GET' })
+      .then(response => response.json())
+      .then(data => {
+        const newMap = new Map<string, SelectedGNIS_ID>()
+        data?.map((visitedLocation: SelectedGNIS_ID) => {
+          newMap.set(visitedLocation.GNIS_ID, visitedLocation);
+        });
+        setSelectedGNIS_IDs(newMap);
+      })
+      .catch(error => {
+        toast.error("Could not get saved locations.", { theme: themeValue });
+        console.log(error);
+      });
+  }, []);
+
   const saveSelections = () => {
     const arrayOfSelected = Array.from(selectedGNIS_IDs.values());
     fetch('http://localhost:8080/visited', { method: 'POST', body: JSON.stringify(arrayOfSelected) })
       .then(response => response.json())
-      .then(data => console.log(data))
+      .then(data => {
+        const newMap = new Map<string, SelectedGNIS_ID>()
+        data?.map((visitedLocation: SelectedGNIS_ID) => {
+          newMap.set(visitedLocation.GNIS_ID, visitedLocation);
+        });
+        setSelectedGNIS_IDs(newMap);
+      })
       .catch(error => {
         toast.error("Oops, something went wrong :(", { theme: themeValue });
         console.log(error);
@@ -79,20 +101,20 @@ function App() {
       const gnis = selectedGNIS_IDs.get(event.features[0].properties.gnis_id);
       const newGNISSelection = new Map(selectedGNIS_IDs);
       if (gnis) {
-        if (gnis.saved && gnis.action == "selected") {
-          newGNISSelection.delete(gnis.gnis_id);
-          newGNISSelection.set(gnis.gnis_id, { gnis_id: gnis.gnis_id, saved: gnis.saved, action: "deleted" });
+        if (gnis.Saved && gnis.Action == "selected") {
+          newGNISSelection.delete(gnis.GNIS_ID);
+          newGNISSelection.set(gnis.GNIS_ID, { GNIS_ID: gnis.GNIS_ID, Saved: gnis.Saved, Action: "deleted" });
         }
-        else if (gnis.saved && gnis.action == "deleted") {
-          newGNISSelection.delete(gnis.gnis_id);
-          newGNISSelection.set(gnis.gnis_id, { gnis_id: gnis.gnis_id, saved: gnis.saved, action: "selected" });
+        else if (gnis.Saved && gnis.Action == "deleted") {
+          newGNISSelection.delete(gnis.GNIS_ID);
+          newGNISSelection.set(gnis.GNIS_ID, { GNIS_ID: gnis.GNIS_ID, Saved: gnis.Saved, Action: "selected" });
         }
-        else if (!gnis.saved && gnis.action == "selected") {
-          newGNISSelection.delete(gnis.gnis_id);
+        else if (!gnis.Saved && gnis.Action == "selected") {
+          newGNISSelection.delete(gnis.GNIS_ID);
         }
       }
       else {
-        newGNISSelection.set(event.features[0].properties.gnis_id, { gnis_id: event.features[0].properties.gnis_id, saved: false, action: "selected" });
+        newGNISSelection.set(event.features[0].properties.gnis_id, { GNIS_ID: event.features[0].properties.gnis_id, Saved: false, Action: "selected" });
       }
       setSelectedGNIS_IDs(newGNISSelection);
     }
@@ -102,7 +124,10 @@ function App() {
 
   const hoverFilter = useMemo(() => ['in', 'gnis_id', hoverArea], [hoverArea]);
 
-  const selectedGNIS_IDFilter = useMemo(() => ['any', ...Array.from(selectedGNIS_IDs.values()).map((selctedGNIS: SelectedGNIS_ID) => ['in', 'gnis_id', selctedGNIS.gnis_id])], [selectedGNIS_IDs]);
+  const selectedGNIS_IDFilter = useMemo(() => ['any', ...Array.from(selectedGNIS_IDs.values())
+    .filter((selectedGNIS: SelectedGNIS_ID) => selectedGNIS.Action === 'selected')
+    .map((selectedGNIS: SelectedGNIS_ID) => ['in', 'gnis_id', selectedGNIS.GNIS_ID])
+  ], [selectedGNIS_IDs]);
 
   return (
     <div>
