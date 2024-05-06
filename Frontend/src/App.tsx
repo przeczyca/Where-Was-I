@@ -9,7 +9,7 @@ import MapButtons from './MapButtons';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-const token = import.meta.env.VITE_MAPBOX_TOKEN;
+const token = import.meta.env.VITE_MAPBOX_TOKEN_DEV;
 const stateSource = import.meta.env.VITE_STATE_SOURCE;
 const countySource = import.meta.env.VITE_COUNTY_SOURCE;
 
@@ -84,7 +84,7 @@ function App() {
       });
 
     //GitHub Pages error toast
-    //toast.error("GitHub Pages is front-end only, no server or database here :(", {theme: themeValue});
+    //toast.error("GitHub Pages is front-end only, no server or database here :(", { theme: themeValue });
   }
 
   const onHover = useCallback((event: mapboxgl.MapMouseEvent & mapboxgl.EventData) => {
@@ -136,10 +136,10 @@ function App() {
         initialViewState={{
           latitude: 38.88,
           longitude: -98,
-          zoom: 2.5
+          zoom: 3
         }}
         style={{ width: "100vw", height: "100vh" }}
-        mapStyle={`mapbox://styles/mapbox/${themeValue}-v9`}
+        mapStyle={`mapbox://styles/mapbox/${themeValue}-v11`}
         onClick={onClick}
         onMouseMove={onHover}
         interactiveLayerIds={['counties', 'states']}
