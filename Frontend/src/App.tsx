@@ -1,42 +1,79 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import './App.css'
-import Map, { Layer, Source } from 'react-map-gl';
+import { ThemeContext } from './context'
+import MapBoxMap, { Layer, Source } from 'react-map-gl';
 import { areaLayer, hoverGNIS_IDLayer, selectedGNIS_IDLayer } from './map-style';
 import mapboxgl from 'mapbox-gl';
 import "mapbox-gl/dist/mapbox-gl.css";
-import MapButtons from './MapButtons';
+import MapButtons from './Components/MapButtons';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { VisitedLocationsAPI } from './APIServices/VisitedLocationsAPI';
+import { HoverInfo, MapModes, SelectedGNIS_ID, Themes } from './Types';
 
-const token = import.meta.env.VITE_MAPBOX_TOKEN;
-const stateSource = import.meta.env.VITE_STATE_SOURCE;
-const countySource = import.meta.env.VITE_COUNTY_SOURCE;
-
-interface HoverInfo {
-  longitude: number;
-  latitude: number;
-  gnis_id: string;
-};
+const ENV = import.meta.env;
+const token = ENV.VITE_MAPBOX_TOKEN_DEV;
+const stateSource = ENV.VITE_STATE_SOURCE;
+const countySource = ENV.VITE_COUNTY_SOURCE;
 
 function App() {
-  const [mapMode, setMapMode] = useState<string>('States');
+  const [mapMode, setMapMode] = useState<MapModes>(MapModes.States);
   const [hoverInfo, setHoverInfo] = useState<HoverInfo | null>(null);
-  const [selectedGNIS_IDs, setSelectedGNIS_IDs] = useState<Array<string>>([]);
+  const [selectedGNIS_IDs, setSelectedGNIS_IDs] = useState<Map<string, SelectedGNIS_ID>>(new Map());
+  const [theme, setTheme] = useState(Themes.Dark);
 
   const changeMapMode = () => {
-    if (mapMode === 'States') {
-      setMapMode('Counties');
-      setHoverInfo(null);
+    switch (mapMode) {
+      case MapModes.States:
+        setMapMode(MapModes.Counties);
+        break;
+      case MapModes.Counties:
+        setMapMode(MapModes.States);
+        break;
     }
-    else {
-      setMapMode('States');
-      setHoverInfo(null);
+    setHoverInfo(null);
+  }
+
+  const changeTheme = () => {
+    switch (theme) {
+      case Themes.Dark:
+        setTheme(Themes.Light);
+        return;
+      case Themes.Light:
+        setTheme(Themes.Dark);
     }
   }
 
+  const newSelectedGNIS_IDs = (data: SelectedGNIS_ID[]) => {
+    const newMap = new Map<string, SelectedGNIS_ID>()
+    if (data) {
+      data.map((visitedLocation: SelectedGNIS_ID) => {
+        newMap.set(visitedLocation.GNIS_ID, visitedLocation);
+      });
+    }
+    return newMap;
+  }
+
+  useEffect(() => {
+    VisitedLocationsAPI.getVisitedLocations()
+      .then(data => setSelectedGNIS_IDs(newSelectedGNIS_IDs(data)))
+      .catch(error => {
+        toast.error("Could not get saved locations.", { theme: theme });
+        console.log(error);
+      });
+  }, []);
+
   const saveSelections = () => {
-    fetch('http://localhost:8080/visited', { method: 'POST', body: JSON.stringify(selectedGNIS_IDs) })
-      .then(response => response.json())
-      .then(data => console.log(data))
-      .catch(error => console.log(error))
+    const selections = Array.from(selectedGNIS_IDs.values());
+    VisitedLocationsAPI.saveSelectedLocations(selections)
+      .then(data => setSelectedGNIS_IDs(newSelectedGNIS_IDs(data)))
+      .catch(error => {
+        toast.error("Oops, something went wrong :(", { theme: theme });
+        console.log(error);
+      });
+
+    //GitHub Pages error toast
+    //toast.error("GitHub Pages is front-end only, no server or database here :(", { theme: themeValue });
   }
 
   const onHover = useCallback((event: mapboxgl.MapMouseEvent & mapboxgl.EventData) => {
@@ -49,27 +86,41 @@ function App() {
   }, [mapMode]);
 
   const onClick = (event: mapboxgl.EventData) => {
-    if (event.features[0]) {
-      const index = selectedGNIS_IDs.indexOf(event.features[0].properties.gnis_id);
-      if (index > -1) {
-        const newGNISSelection = selectedGNIS_IDs.filter(state => state !== event.features[0].properties.gnis_id);
-        setSelectedGNIS_IDs(newGNISSelection);
-      }
-      else {
-        setSelectedGNIS_IDs([...selectedGNIS_IDs, event.features[0].properties.gnis_id]);
-      }
+    if (event.features[0] === undefined) {
+      return;
     }
+
+    const gnis = selectedGNIS_IDs.get(event.features[0].properties.gnis_id);
+    const newGNISSelection = new Map(selectedGNIS_IDs);
+    if (gnis === undefined) {
+      newGNISSelection.set(event.features[0].properties.gnis_id, { GNIS_ID: event.features[0].properties.gnis_id, Saved: false, Action: "selected" });
+    }
+    else if (gnis.Saved && gnis.Action == "selected") {
+      newGNISSelection.delete(gnis.GNIS_ID);
+      newGNISSelection.set(gnis.GNIS_ID, { GNIS_ID: gnis.GNIS_ID, Saved: gnis.Saved, Action: "deleted" });
+    }
+    else if (gnis.Saved && gnis.Action == "deleted") {
+      newGNISSelection.delete(gnis.GNIS_ID);
+      newGNISSelection.set(gnis.GNIS_ID, { GNIS_ID: gnis.GNIS_ID, Saved: gnis.Saved, Action: "selected" });
+    }
+    else if (!gnis.Saved && gnis.Action == "selected") {
+      newGNISSelection.delete(gnis.GNIS_ID);
+    }
+    setSelectedGNIS_IDs(newGNISSelection);
   }
 
   const hoverArea = (hoverInfo && hoverInfo.gnis_id) || '';
 
   const hoverFilter = useMemo(() => ['in', 'gnis_id', hoverArea], [hoverArea]);
 
-  const selectedGNIS_IDFilter = useMemo(() => ['any', ...selectedGNIS_IDs.map((gnis_id) => ['in', 'gnis_id', gnis_id])], [selectedGNIS_IDs]);
+  const selectedGNIS_IDFilter = useMemo(() => ['any', ...Array.from(selectedGNIS_IDs.values())
+    .filter((selectedGNIS: SelectedGNIS_ID) => selectedGNIS.Action === 'selected')
+    .map((selectedGNIS: SelectedGNIS_ID) => ['in', 'gnis_id', selectedGNIS.GNIS_ID])
+  ], [selectedGNIS_IDs]);
 
   return (
     <div>
-      <Map
+      <MapBoxMap
         mapboxAccessToken={token}
         initialViewState={{
           latitude: 38.88,
@@ -77,27 +128,30 @@ function App() {
           zoom: 3
         }}
         style={{ width: "100vw", height: "100vh" }}
-        mapStyle="mapbox://styles/mapbox/light-v9"
+        mapStyle={`mapbox://styles/mapbox/${theme}-v11`}
         onClick={onClick}
         onMouseMove={onHover}
         interactiveLayerIds={['counties', 'states']}
       >
-        {mapMode === 'States' &&
+        {mapMode === MapModes.States &&
           <Source type="vector" url='mapbox://przeczyca.cq49tua3'>
             <Layer {...areaLayer} source-layer={stateSource} />
             <Layer {...hoverGNIS_IDLayer} source-layer={stateSource} filter={hoverFilter} />
             <Layer {...selectedGNIS_IDLayer} source-layer={stateSource} filter={selectedGNIS_IDFilter} />
           </Source>
         }
-        {mapMode === 'Counties' &&
+        {mapMode === MapModes.Counties &&
           <Source type="vector" url="mapbox://przeczyca.8b30w66c">
             <Layer {...areaLayer} source-layer={countySource} />
             <Layer {...hoverGNIS_IDLayer} source-layer={countySource} filter={hoverFilter} />
             <Layer {...selectedGNIS_IDLayer} source-layer={countySource} filter={selectedGNIS_IDFilter} />
           </Source>
         }
-      </Map>
-      <MapButtons mapMode={mapMode} changeMapMode={changeMapMode} saveSelections={saveSelections} />
+      </MapBoxMap>
+      <ThemeContext.Provider value={theme}>
+        <MapButtons mapMode={mapMode} changeMapMode={changeMapMode} saveSelections={saveSelections} changeTheme={changeTheme} />
+      </ThemeContext.Provider>
+      <ToastContainer closeOnClick />
     </div>
   )
 }
