@@ -5,81 +5,70 @@ import MapBoxMap, { Layer, Source } from 'react-map-gl';
 import { areaLayer, hoverGNIS_IDLayer, selectedGNIS_IDLayer } from './map-style';
 import mapboxgl from 'mapbox-gl';
 import "mapbox-gl/dist/mapbox-gl.css";
-import MapButtons from './MapButtons';
+import MapButtons from './Components/MapButtons';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { VisitedLocationsAPI } from './APIServices/VisitedLocationsAPI';
+import { HoverInfo, MapModes, SelectedGNIS_ID, Themes } from './Types';
 
-const token = import.meta.env.VITE_MAPBOX_TOKEN_DEV;
-const stateSource = import.meta.env.VITE_STATE_SOURCE;
-const countySource = import.meta.env.VITE_COUNTY_SOURCE;
-
-interface HoverInfo {
-  longitude: number;
-  latitude: number;
-  gnis_id: string;
-};
-
-interface SelectedGNIS_ID {
-  GNIS_ID: string;
-  Saved: boolean;
-  Action: string;
-}
+const ENV = import.meta.env;
+const token = ENV.VITE_MAPBOX_TOKEN_DEV;
+const stateSource = ENV.VITE_STATE_SOURCE;
+const countySource = ENV.VITE_COUNTY_SOURCE;
 
 function App() {
-  const [mapMode, setMapMode] = useState<string>('States');
+  const [mapMode, setMapMode] = useState<MapModes>(MapModes.States);
   const [hoverInfo, setHoverInfo] = useState<HoverInfo | null>(null);
   const [selectedGNIS_IDs, setSelectedGNIS_IDs] = useState<Map<string, SelectedGNIS_ID>>(new Map());
-  const [themeValue, setTheme] = useState("dark");
+  const [theme, setTheme] = useState(Themes.Dark);
 
   const changeMapMode = () => {
-    if (mapMode === 'States') {
-      setMapMode('Counties');
-      setHoverInfo(null);
+    switch (mapMode) {
+      case MapModes.States:
+        setMapMode(MapModes.Counties);
+        break;
+      case MapModes.Counties:
+        setMapMode(MapModes.States);
+        break;
     }
-    else {
-      setMapMode('States');
-      setHoverInfo(null);
-    }
+    setHoverInfo(null);
   }
 
   const changeTheme = () => {
-    if (themeValue === "dark") {
-      setTheme("light");
-    }
-    else {
-      setTheme("dark");
+    switch (theme) {
+      case Themes.Dark:
+        setTheme(Themes.Light);
+        return;
+      case Themes.Light:
+        setTheme(Themes.Dark);
     }
   }
 
+  const newSelectedGNIS_IDs = (data: SelectedGNIS_ID[]) => {
+    const newMap = new Map<string, SelectedGNIS_ID>()
+    if (data) {
+      data.map((visitedLocation: SelectedGNIS_ID) => {
+        newMap.set(visitedLocation.GNIS_ID, visitedLocation);
+      });
+    }
+    return newMap;
+  }
+
   useEffect(() => {
-    fetch('http://localhost:8080/visited', { method: 'GET' })
-      .then(response => response.json())
-      .then(data => {
-        const newMap = new Map<string, SelectedGNIS_ID>()
-        data?.map((visitedLocation: SelectedGNIS_ID) => {
-          newMap.set(visitedLocation.GNIS_ID, visitedLocation);
-        });
-        setSelectedGNIS_IDs(newMap);
-      })
+    VisitedLocationsAPI.getVisitedLocations()
+      .then(data => setSelectedGNIS_IDs(newSelectedGNIS_IDs(data)))
       .catch(error => {
-        toast.error("Could not get saved locations.", { theme: themeValue });
+        toast.error("Could not get saved locations.", { theme: theme });
         console.log(error);
       });
   }, []);
 
   const saveSelections = () => {
-    const arrayOfSelected = Array.from(selectedGNIS_IDs.values());
-    fetch('http://localhost:8080/visited', { method: 'POST', body: JSON.stringify(arrayOfSelected) })
-      .then(response => response.json())
-      .then(data => {
-        const newMap = new Map<string, SelectedGNIS_ID>()
-        data?.map((visitedLocation: SelectedGNIS_ID) => {
-          newMap.set(visitedLocation.GNIS_ID, visitedLocation);
-        });
-        setSelectedGNIS_IDs(newMap);
-      })
+    const selections = Array.from(selectedGNIS_IDs.values());
+    VisitedLocationsAPI.saveSelectedLocations(selections)
+      .then(data => setSelectedGNIS_IDs(newSelectedGNIS_IDs(data)))
       .catch(error => {
-        toast.error("Oops, something went wrong :(", { theme: themeValue });
+        toast.error("Oops, something went wrong :(", { theme: theme });
         console.log(error);
       });
 
@@ -97,27 +86,27 @@ function App() {
   }, [mapMode]);
 
   const onClick = (event: mapboxgl.EventData) => {
-    if (event.features[0]) {
-      const gnis = selectedGNIS_IDs.get(event.features[0].properties.gnis_id);
-      const newGNISSelection = new Map(selectedGNIS_IDs);
-      if (gnis) {
-        if (gnis.Saved && gnis.Action == "selected") {
-          newGNISSelection.delete(gnis.GNIS_ID);
-          newGNISSelection.set(gnis.GNIS_ID, { GNIS_ID: gnis.GNIS_ID, Saved: gnis.Saved, Action: "deleted" });
-        }
-        else if (gnis.Saved && gnis.Action == "deleted") {
-          newGNISSelection.delete(gnis.GNIS_ID);
-          newGNISSelection.set(gnis.GNIS_ID, { GNIS_ID: gnis.GNIS_ID, Saved: gnis.Saved, Action: "selected" });
-        }
-        else if (!gnis.Saved && gnis.Action == "selected") {
-          newGNISSelection.delete(gnis.GNIS_ID);
-        }
-      }
-      else {
-        newGNISSelection.set(event.features[0].properties.gnis_id, { GNIS_ID: event.features[0].properties.gnis_id, Saved: false, Action: "selected" });
-      }
-      setSelectedGNIS_IDs(newGNISSelection);
+    if (event.features[0] === undefined) {
+      return;
     }
+
+    const gnis = selectedGNIS_IDs.get(event.features[0].properties.gnis_id);
+    const newGNISSelection = new Map(selectedGNIS_IDs);
+    if (gnis === undefined) {
+      newGNISSelection.set(event.features[0].properties.gnis_id, { GNIS_ID: event.features[0].properties.gnis_id, Saved: false, Action: "selected" });
+    }
+    else if (gnis.Saved && gnis.Action == "selected") {
+      newGNISSelection.delete(gnis.GNIS_ID);
+      newGNISSelection.set(gnis.GNIS_ID, { GNIS_ID: gnis.GNIS_ID, Saved: gnis.Saved, Action: "deleted" });
+    }
+    else if (gnis.Saved && gnis.Action == "deleted") {
+      newGNISSelection.delete(gnis.GNIS_ID);
+      newGNISSelection.set(gnis.GNIS_ID, { GNIS_ID: gnis.GNIS_ID, Saved: gnis.Saved, Action: "selected" });
+    }
+    else if (!gnis.Saved && gnis.Action == "selected") {
+      newGNISSelection.delete(gnis.GNIS_ID);
+    }
+    setSelectedGNIS_IDs(newGNISSelection);
   }
 
   const hoverArea = (hoverInfo && hoverInfo.gnis_id) || '';
@@ -139,19 +128,19 @@ function App() {
           zoom: 3
         }}
         style={{ width: "100vw", height: "100vh" }}
-        mapStyle={`mapbox://styles/mapbox/${themeValue}-v11`}
+        mapStyle={`mapbox://styles/mapbox/${theme}-v11`}
         onClick={onClick}
         onMouseMove={onHover}
         interactiveLayerIds={['counties', 'states']}
       >
-        {mapMode === 'States' &&
+        {mapMode === MapModes.States &&
           <Source type="vector" url='mapbox://przeczyca.cq49tua3'>
             <Layer {...areaLayer} source-layer={stateSource} />
             <Layer {...hoverGNIS_IDLayer} source-layer={stateSource} filter={hoverFilter} />
             <Layer {...selectedGNIS_IDLayer} source-layer={stateSource} filter={selectedGNIS_IDFilter} />
           </Source>
         }
-        {mapMode === 'Counties' &&
+        {mapMode === MapModes.Counties &&
           <Source type="vector" url="mapbox://przeczyca.8b30w66c">
             <Layer {...areaLayer} source-layer={countySource} />
             <Layer {...hoverGNIS_IDLayer} source-layer={countySource} filter={hoverFilter} />
@@ -159,7 +148,7 @@ function App() {
           </Source>
         }
       </MapBoxMap>
-      <ThemeContext.Provider value={themeValue}>
+      <ThemeContext.Provider value={theme}>
         <MapButtons mapMode={mapMode} changeMapMode={changeMapMode} saveSelections={saveSelections} changeTheme={changeTheme} />
       </ThemeContext.Provider>
       <ToastContainer closeOnClick />
