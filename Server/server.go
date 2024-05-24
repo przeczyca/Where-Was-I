@@ -6,12 +6,19 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		panic(err)
+	}
+
 	db := connectToDB()
 
 	mux := http.NewServeMux()
@@ -19,7 +26,7 @@ func main() {
 	mux.Handle("/visited", &visitedHandler{db})
 	mux.Handle("/visited/", &visitedHandler{db})
 
-	http.ListenAndServe("localhost:8080", mux)
+	http.ListenAndServe(os.Getenv("SERVER_URL"), mux)
 }
 
 type VisitedLocation struct {
@@ -29,7 +36,7 @@ type VisitedLocation struct {
 }
 
 func connectToDB() (db *sql.DB) {
-	var conninfo string = "postgresql://postgres:TyrantLizard@69@localhost:5432/postgres?sslmode=disable"
+	var conninfo string = os.Getenv("DATABASE")
 
 	db, err := sql.Open("postgres", conninfo)
 	if err != nil {
