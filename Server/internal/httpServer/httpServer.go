@@ -24,10 +24,17 @@ func StartHttpServer() {
 	mux.Handle("/visited", &VisitedHandler{db})
 	mux.Handle("/visited/", &VisitedHandler{db})
 
+	mux.Handle("/color", &ColorHandler{db})
+	mux.Handle("/color/", &ColorHandler{db})
+
 	http.ListenAndServe(os.Getenv("SERVER_URL"), mux)
 }
 
 type VisitedHandler struct {
+	db *sql.DB
+}
+
+type ColorHandler struct {
 	db *sql.DB
 }
 
@@ -47,5 +54,19 @@ func (h *VisitedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Write(api.GetVisited(h.db))
 	case r.Method == http.MethodPost:
 		w.Write(api.UpdateVisited(h.db, w, r))
+	}
+}
+
+func (h *ColorHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
+	switch {
+	case r.Method == http.MethodGet:
+		w.Write(api.GetColors(h.db))
+	case r.Method == http.MethodPost:
+		w.Write(api.CreateColors(h.db, w, r))
+	case r.Method == http.MethodPut:
+		w.Write(api.UpdateColors(h.db, w, r))
+	case r.Method == http.MethodDelete:
+		w.Write(api.DeleteColor(h.db, w, r))
 	}
 }
