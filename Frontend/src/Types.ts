@@ -10,6 +10,12 @@ export interface HoverInfo {
     gnis_id: string;
 }
 
+export interface Color {
+    Color_id: number;
+    Description: string;
+    Hex_value: string;
+}
+
 export enum MapModes {
     States = "States",
     Counties = "Counties"

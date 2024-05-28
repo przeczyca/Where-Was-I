@@ -2,6 +2,7 @@ import { IconSun, IconMoon } from '@tabler/icons-react';
 import { useContext } from 'react';
 import { ThemeContext } from '../context';
 import { MapModes, Themes } from '../Types';
+import ColorMenu from './ColorMenu';
 
 interface MapButtonsProps {
     mapMode: MapModes;
@@ -15,6 +16,7 @@ function MapButtons(props: MapButtonsProps) {
 
     return (
         <div className="mapButtonsContainer">
+            <ColorMenu></ColorMenu>
             <button className={"mapButton mapButton" + (theme === Themes.Dark ? "Dark" : "Light")} onClick={props.changeMapMode}>{props.mapMode}</button>
             <button className={"mapButton mapButton" + (theme === Themes.Dark ? "Dark" : "Light")} onClick={props.saveSelections}>Save</button>
             <button className={"mapButton mapButton" + (theme === Themes.Dark ? "Dark" : "Light")} onClick={props.changeTheme}>

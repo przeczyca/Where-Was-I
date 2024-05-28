@@ -1,0 +1,29 @@
+.colorMenu {
+    display: flex;
+    align-items: center;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    font-size: 1em;
+    font-weight: 500;
+    font-family: inherit;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    font-size: 13px;
+    margin: 5px;
+}
+
+.description {
+    display: inline-block;
+    margin-top: 0.6em;
+    margin-bottom: 0.6em;
+    margin-left: 1.2em;
+}
+
+.square {
+    display: inline-block;
+    margin-left: 1em;
+    margin-right: 1.2em;
+    bottom: 0;
+    height: 1em;
+    width: 1em;
+    background-color: #747bff;
+}
