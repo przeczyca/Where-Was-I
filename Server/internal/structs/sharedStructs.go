@@ -5,3 +5,9 @@ type VisitedLocation struct {
 	Saved   bool
 	Action  string
 }
+
+type Color struct {
+	Color_ID    int
+	Description string
+	HexValue    string
+}
