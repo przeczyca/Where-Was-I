@@ -21,9 +21,20 @@
 .square {
     display: inline-block;
     margin-left: 1em;
-    margin-right: 1.2em;
     bottom: 0;
     height: 1em;
     width: 1em;
     background-color: #747bff;
+}
+
+.colorMenuIcon {
+    height: 1.5em;
+    width: 1.5em;
+    margin-left: 1em;
+    margin-right: 1em;
+    border-radius: 4px;
+}
+
+.colorMenuIcon:hover {
+    background: #616161;
 }
