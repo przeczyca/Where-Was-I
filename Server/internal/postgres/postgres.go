@@ -27,7 +27,7 @@ func ConnectToDB() (db *sql.DB) {
 }
 
 func GetAllVisitedLocations(db *sql.DB) (rows *sql.Rows) {
-	query := "SELECT * FROM visited_locations;"
+	query := "SELECT gnis_id FROM visited_locations;"
 
 	rows, err := db.Query(query)
 	if err != nil {
