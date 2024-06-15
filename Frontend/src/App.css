@@ -1,11 +1,20 @@
 #root {
   margin: 0 auto;
-  text-align: center;
 }
 
 .mapContainer {
   width: 100vw;
   height: 100vh;
+}
+
+.themeLight {
+  background: #fff;
+  color: #6b6b76;
+}
+
+.themeDark {
+  background: #4e4e4e;
+  color: #fff;
 }
 
 .mapButtonsContainer {
@@ -20,14 +29,4 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   font-size: 13px;
   margin: 5px;
-}
-
-.mapButtonLight {
-  background: #fff;
-  color: #6b6b76;
-}
-
-.mapButtonDark {
-  background: #4e4e4e;
-  color: #fff;
 }

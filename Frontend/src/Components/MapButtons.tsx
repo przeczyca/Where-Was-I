@@ -17,9 +17,9 @@ function MapButtons(props: MapButtonsProps) {
     return (
         <div className="mapButtonsContainer">
             <ColorMenu></ColorMenu>
-            <button className={"mapButton mapButton" + (theme === Themes.Dark ? "Dark" : "Light")} onClick={props.changeMapMode}>{props.mapMode}</button>
-            <button className={"mapButton mapButton" + (theme === Themes.Dark ? "Dark" : "Light")} onClick={props.saveSelections}>Save</button>
-            <button className={"mapButton mapButton" + (theme === Themes.Dark ? "Dark" : "Light")} onClick={props.changeTheme}>
+            <button className={"mapButton theme" + (theme === Themes.Dark ? "Dark" : "Light")} onClick={props.changeMapMode}>{props.mapMode}</button>
+            <button className={"mapButton theme" + (theme === Themes.Dark ? "Dark" : "Light")} onClick={props.saveSelections}>Save</button>
+            <button className={"mapButton theme" + (theme === Themes.Dark ? "Dark" : "Light")} onClick={props.changeTheme}>
                 {theme === Themes.Dark && <IconMoon />}
                 {theme === Themes.Light && <IconSun />}
             </button>
