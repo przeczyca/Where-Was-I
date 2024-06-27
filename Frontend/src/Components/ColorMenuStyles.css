@@ -1,6 +1,5 @@
 .colorMenuContainer {
     border-radius: 8px;
-    border: 1px solid transparent;
     font-size: 1em;
     font-weight: 500;
     font-family: inherit;
@@ -9,15 +8,22 @@
     margin: 5px;
 }
 
-.colorMenu {
+.colorMenuControl {
     display: flex;
     align-items: center;
     padding: 0.6em 1.2em;
 }
 
-.palleteIcon {
-    margin-top: 0.6em;
-    margin-left: 1.2em;
+.colorMenuOptions {
+    display: flex;
+    align-items: center;
+    padding: 0.6em 1.2em;
+}
+
+.colorSquare {
+    display: inline;
+    width: 1em;
+    height: 1em;
 }
 
 .description {
@@ -37,5 +43,10 @@
 }
 
 .colorMenuIcon:hover {
+    background: #616161;
+}
+
+.selectedColorOption {
+    border-radius: 8px;
     background: #616161;
 }
