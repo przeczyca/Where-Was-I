@@ -10,16 +10,6 @@ export const areaLayer: FillLayer = {
     }
 };
 
-export const hoverGNIS_IDLayer: FillLayer = {
-    id: 'gnis-highlighted',
-    type: 'fill',
-    paint: {
-        'fill-outline-color': '#484896',
-        'fill-color': '#6e599f',
-        'fill-opacity': 0.75
-    }
-};
-
 export const selectedGNIS_IDLayer: FillLayer = {
     id: 'gnis-selected',
     type: 'fill',
