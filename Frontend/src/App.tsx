@@ -23,7 +23,7 @@ function App() {
   const [theme, setTheme] = useState(Themes.Dark);
 
   const useTestColors = () => {
-    return [{Color_id: 1, Description: "Default", Hex_value: "#747bff"}, {Color_id: 2, Description: "Default", Hex_value: "#747bff"}];
+    return [{ Color_id: 1, Description: "Default", Hex_value: "#747bff" }, { Color_id: 2, Description: "Default", Hex_value: "#747bff" }];
   }
 
   const [savedColors, setSavedColors] = useState<Color[]>(useTestColors());
@@ -100,15 +100,15 @@ function App() {
     const gnis = selectedGNIS_IDs.get(event.features[0].properties.gnis_id);
     const newGNISSelection = new Map(selectedGNIS_IDs);
     if (gnis === undefined) {
-      newGNISSelection.set(event.features[0].properties.gnis_id, { GNIS_ID: event.features[0].properties.gnis_id, Saved: false, Action: "selected", Color_id: event.features[0].properties.Color_id });
+      newGNISSelection.set(event.features[0].properties.gnis_id, { GNIS_ID: event.features[0].properties.gnis_id, Saved: false, Action: "selected", Color_id: selectedColorID });
     }
     else if (gnis.Saved && gnis.Action == "selected") {
       newGNISSelection.delete(gnis.GNIS_ID);
-      newGNISSelection.set(gnis.GNIS_ID, { GNIS_ID: gnis.GNIS_ID, Saved: gnis.Saved, Action: "deleted", Color_id: event.features[0].properties.Color_id });
+      newGNISSelection.set(gnis.GNIS_ID, { GNIS_ID: gnis.GNIS_ID, Saved: gnis.Saved, Action: "deleted", Color_id: selectedColorID });
     }
     else if (gnis.Saved && gnis.Action == "deleted") {
       newGNISSelection.delete(gnis.GNIS_ID);
-      newGNISSelection.set(gnis.GNIS_ID, { GNIS_ID: gnis.GNIS_ID, Saved: gnis.Saved, Action: "selected", Color_id: event.features[0].properties.Color_id });
+      newGNISSelection.set(gnis.GNIS_ID, { GNIS_ID: gnis.GNIS_ID, Saved: gnis.Saved, Action: "selected", Color_id: selectedColorID });
     }
     else if (!gnis.Saved && gnis.Action == "selected") {
       newGNISSelection.delete(gnis.GNIS_ID);
@@ -130,9 +130,9 @@ function App() {
       id: 'gnis-highlighted',
       type: 'fill',
       paint: {
-          'fill-outline-color': '#484896',
-          'fill-color': savedColors.find((color) => color.Color_id === selectedColorID)?.Hex_value,
-          'fill-opacity': 0.75
+        'fill-outline-color': '#484896',
+        'fill-color': savedColors.find((color) => color.Color_id === selectedColorID)?.Hex_value,
+        'fill-opacity': 0.75
       }
     };
   }, [selectedColorID, savedColors]);
@@ -156,7 +156,7 @@ function App() {
 
   return (
     <div>
-      <ColorMenuContext.Provider value={{savedColors, setSavedColors, selectedColorID, setSelectedColorID}}>
+      <ColorMenuContext.Provider value={{ savedColors, setSavedColors, selectedColorID, setSelectedColorID }}>
         <MapBoxMap
           mapboxAccessToken={token}
           initialViewState={{
@@ -186,7 +186,7 @@ function App() {
           }
         </MapBoxMap>
         <ThemeContext.Provider value={theme}>
-            <MapButtons mapMode={mapMode} changeMapMode={changeMapMode} saveSelections={saveSelections} changeTheme={changeTheme} />
+          <MapButtons mapMode={mapMode} changeMapMode={changeMapMode} saveSelections={saveSelections} changeTheme={changeTheme} />
         </ThemeContext.Provider>
         <ToastContainer closeOnClick />
       </ColorMenuContext.Provider>
