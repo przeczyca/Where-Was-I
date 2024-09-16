@@ -1,12 +1,8 @@
 import { MouseEvent, useContext, useState } from "react";
 import { Color, Themes } from "../Types";
-import { ColorMenuContext, ThemeContext, useColorMenuContext } from "../context";
+import { ThemeContext, useColorMenuContext } from "../context";
 import { IconPalette, IconPlus, IconTrash } from "@tabler/icons-react";
 import "./ColorMenuStyles.css"
-
-interface ColorMenuProps {
-
-}
 
 export default function ColorMenu() {
     const [colorMenu, setColorMenu] = useState(false);
