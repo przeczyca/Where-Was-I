@@ -27,7 +27,7 @@ export default function ColorMenu() {
     }
 
     const addColor = () => {
-        colorMenuContext.setSavedColors([...colorMenuContext.savedColors, {Color_id: newColorIDCounter, Description: "Default", Hex_value: "#747bff"}]);
+        colorMenuContext.setSavedColors([...colorMenuContext.savedColors, { Color_id: newColorIDCounter, Description: "Default", Hex_value: "#747bff" }]);
         colorMenuContext.setSelectedColorID(newColorIDCounter);
         setNewColorIDCounter(newColorIDCounter - 1);
     }
@@ -36,7 +36,6 @@ export default function ColorMenu() {
         e.stopPropagation();
         const i = colorMenuContext.savedColors.findIndex((color) => color.Color_id === toDelete.Color_id);
 
-        console.log(i, colorMenuContext.savedColors.length)
         if (i !== 0 && colorMenuContext.savedColors.length !== 1) {
             if (i < colorMenuContext.savedColors.length - 1) {
                 colorMenuContext.setSelectedColorID(colorMenuContext.savedColors[i + 1].Color_id);
@@ -72,24 +71,26 @@ export default function ColorMenu() {
             {!colorMenu &&
                 <button className={"mapButton theme" + (theme === Themes.Dark ? "Dark" : "Light")} onClick={() => setColorMenu(!colorMenu)}>
                     <IconPalette />
-                    <div className="colorSquare" style={{backgroundColor: colorMenuContext.savedColors.find((color) => color.Color_id === colorMenuContext.selectedColorID)?.Hex_value}} />
+                    <div className="colorSquare" style={{ backgroundColor: colorMenuContext.savedColors.find((color) => color.Color_id === colorMenuContext.selectedColorID)?.Hex_value }} />
                 </button>
             }
             {colorMenu &&
                 <div className={"colorMenuContainer theme" + (theme === Themes.Dark ? "Dark" : "Light")}>
                     <div className="colorMenuControl">
-                        <IconPalette className="palleteIcon" onClick={() => setColorMenu(!colorMenu)}/>
+                        <IconPalette className="palleteIcon" onClick={() => setColorMenu(!colorMenu)} />
                         <button className={"mapButton theme" + (theme === Themes.Dark ? "Dark" : "Light")} onClick={() => saveColorChanges()}>Save Changes</button>
                         <div
                             className="colorSquare"
-                            style={{backgroundColor: colorMenuContext.savedColors.find((color) => {
-                                color.Color_id === colorMenuContext.selectedColorID;
-                            })?.Hex_value}}
+                            style={{
+                                backgroundColor: colorMenuContext.savedColors.find((color) => {
+                                    color.Color_id === colorMenuContext.selectedColorID;
+                                })?.Hex_value
+                            }}
                         />
                         <IconPlus onClick={() => addColor()} />
                     </div>
 
-                    {colorMenuContext.savedColors.map((colorOption) => 
+                    {colorMenuContext.savedColors.map((colorOption) =>
                         <div
                             className={"colorMenuOptions " + ((colorOption.Color_id === colorMenuContext.selectedColorID) ? "selectedColorOption" : "")}
                             key={colorOption.Color_id}
@@ -115,7 +116,7 @@ export default function ColorMenu() {
                                 onChange={e => onColorChange(colorOption, e.target.value)}
                             />
                             {colorOption.Color_id === colorMenuContext.selectedColorID &&
-                                <IconTrash onClick={(e) => deleteColor(e, colorOption)}/>
+                                <IconTrash onClick={(e) => deleteColor(e, colorOption)} />
                             }
                         </div>
                     )}
