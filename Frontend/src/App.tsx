@@ -120,10 +120,15 @@ function App() {
 
   const hoverFilter = useMemo(() => ['in', 'gnis_id', hoverArea], [hoverArea]);
 
-  const selectedGNIS_IDFilter = useMemo(() => ['any', ...Array.from(selectedGNIS_IDs.values())
-    .filter((selectedGNIS: SelectedGNIS_ID) => selectedGNIS.Action === 'selected')
-    .map((selectedGNIS: SelectedGNIS_ID) => ['in', 'gnis_id', selectedGNIS.GNIS_ID])
-  ], [selectedGNIS_IDs]);
+  const selectedGNIS_IDFilter = useMemo(() => {
+    const filter = ['any', ...Array.from(selectedGNIS_IDs.values())
+      .filter((selectedGNIS: SelectedGNIS_ID) => selectedGNIS.Action === 'selected')
+      .map((selectedGNIS: SelectedGNIS_ID) => ['in', 'gnis_id', selectedGNIS.GNIS_ID])
+    ];
+
+    //console.log(filter);
+    return filter;
+  }, [selectedGNIS_IDs]);
 
   const hoverGNIS_IDLayer: FillLayer = useMemo(() => {
     return {
@@ -132,25 +137,84 @@ function App() {
       paint: {
         'fill-outline-color': '#484896',
         'fill-color': savedColors.find((color) => color.Color_id === selectedColorID)?.Hex_value,
-        'fill-opacity': 0.75
+        'fill-opacity': 0.5
       }
     };
   }, [selectedColorID, savedColors]);
 
-  const selectedGNIS_IDLayers: Map<string, string[]> = useMemo(() => {
-    const colorsAndPlaces = new Map<string, string[]>();
+  const stateLayersWithFilters: any[] = useMemo(() => {
+    const colorsAndPlaces = new Map<number, string[]>();
     savedColors.map((color) => {
-      colorsAndPlaces.set(color.Hex_value, []);
+      //index 0 is hex value
+      colorsAndPlaces.set(color.Color_id, [color.Hex_value]);
     });
 
-    console.log(savedColors, selectedGNIS_IDs);
     selectedGNIS_IDs.forEach((gnis_id) => {
-      colorsAndPlaces.get(savedColors.find((color) => color.Color_id === gnis_id.Color_id)!.Hex_value)?.push(gnis_id.GNIS_ID);
+      colorsAndPlaces.get(gnis_id.Color_id)?.push(gnis_id.GNIS_ID);
     });
 
-    console.log(colorsAndPlaces);
+    const layers: any[] = [];
 
-    return colorsAndPlaces;
+    const pushLayer = (layer: string[], key: number) => {
+      if (layer.length > 1 && layer[0].charAt(0) === '#') {
+        const hexValue = layer.shift();
+        const layerOptions: FillLayer = {
+          id: 'gnis-selected' + key,
+          type: 'fill',
+          paint: {
+            'fill-outline-color': '#484896',
+            'fill-color': hexValue,
+            'fill-opacity': 0.75
+          }
+        };
+
+        const filter = ['any', ...layer.map((savedGNIS_ID) => ['in', 'gnis_id', savedGNIS_ID])];
+
+        layers.push(<Layer key={key} {...layerOptions} source-layer={stateSource} filter={filter} />);
+      }
+    }
+
+    colorsAndPlaces.forEach(pushLayer);
+
+    return layers;
+
+  }, [savedColors, selectedGNIS_IDs]);
+
+  const countyLayersWithFilters: any[] = useMemo(() => {
+    const colorsAndPlaces = new Map<number, string[]>();
+    savedColors.map((color) => {
+      //index 0 is hex value
+      colorsAndPlaces.set(color.Color_id, [color.Hex_value]);
+    });
+
+    selectedGNIS_IDs.forEach((gnis_id) => {
+      colorsAndPlaces.get(gnis_id.Color_id)?.push(gnis_id.GNIS_ID);
+    });
+
+    const layers: any[] = [];
+
+    const pushLayer = (layer: string[], key: number) => {
+      if (layer.length > 1 && layer[0].charAt(0) === '#') {
+        const hexValue = layer.shift();
+        const layerOptions: FillLayer = {
+          id: 'gnis-selected' + key,
+          type: 'fill',
+          paint: {
+            'fill-outline-color': '#484896',
+            'fill-color': hexValue,
+            'fill-opacity': 0.75
+          }
+        };
+
+        const filter = ['any', ...layer.map((savedGNIS_ID) => ['in', 'gnis_id', savedGNIS_ID])];
+
+        layers.push(<Layer key={key} {...layerOptions} source-layer={countySource} filter={filter} />);
+      }
+    }
+
+    colorsAndPlaces.forEach(pushLayer);
+
+    return layers;
 
   }, [savedColors, selectedGNIS_IDs]);
 
@@ -174,14 +238,14 @@ function App() {
             <Source type="vector" url='mapbox://przeczyca.cq49tua3'>
               <Layer {...areaLayer} source-layer={stateSource} />
               <Layer {...hoverGNIS_IDLayer} source-layer={stateSource} filter={hoverFilter} />
-              <Layer {...selectedGNIS_IDLayer} source-layer={stateSource} filter={selectedGNIS_IDFilter} />
+              {stateLayersWithFilters}
             </Source>
           }
           {mapMode === MapModes.Counties &&
             <Source type="vector" url="mapbox://przeczyca.8b30w66c">
               <Layer {...areaLayer} source-layer={countySource} />
               <Layer {...hoverGNIS_IDLayer} source-layer={countySource} filter={hoverFilter} />
-              <Layer {...selectedGNIS_IDLayer} source-layer={countySource} filter={selectedGNIS_IDFilter} />
+              {countyLayersWithFilters}
             </Source>
           }
         </MapBoxMap>
