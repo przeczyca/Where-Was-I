@@ -23,7 +23,7 @@ function App() {
   const [theme, setTheme] = useState(Themes.Dark);
 
   const useTestColors = () => {
-    return [{ Color_id: 1, Description: "Default", Hex_value: "#747bff" }, { Color_id: 2, Description: "Default", Hex_value: "#747bff" }];
+    return [{ Action: "default", Color_id: 1, Description: "Default", Hex_value: "#747bff" }];
   }
 
   const [savedColors, setSavedColors] = useState<Color[]>(useTestColors());
@@ -81,6 +81,20 @@ function App() {
 
     //GitHub Pages error toast
     //toast.error("GitHub Pages is front-end only, no server or database here :(", { theme: themeValue });
+  }
+
+  const changeSelectionsToDefaultColorByColorID = (colorID: number) => {
+    const newSelectedGNIS_IDs = new Map(selectedGNIS_IDs);
+    newSelectedGNIS_IDs.forEach((selection) => {
+      const updatedSelection = {
+        GNIS_ID: selection.GNIS_ID,
+        Saved: selection.Saved,
+        Action: selection.Action,
+        Color_id: selection.Color_id === colorID ? 1 : selection.Color_id
+      }
+      newSelectedGNIS_IDs.set(selection.GNIS_ID, updatedSelection);
+    });
+    setSelectedGNIS_IDs(newSelectedGNIS_IDs);
   }
 
   const onHover = useCallback((event: mapboxgl.MapMouseEvent & mapboxgl.EventData) => {
@@ -212,7 +226,7 @@ function App() {
           }
         </MapBoxMap>
         <ThemeContext.Provider value={theme}>
-          <MapButtons mapMode={mapMode} changeMapMode={changeMapMode} saveSelections={saveSelections} changeTheme={changeTheme} />
+          <MapButtons mapMode={mapMode} changeMapMode={changeMapMode} saveSelections={saveSelections} changeTheme={changeTheme} changeSelectionsToDefaultColorByColorID={changeSelectionsToDefaultColorByColorID} />
         </ThemeContext.Provider>
         <ToastContainer closeOnClick />
       </ColorMenuContext.Provider>

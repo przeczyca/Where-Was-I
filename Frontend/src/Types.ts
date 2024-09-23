@@ -12,6 +12,7 @@ export interface HoverInfo {
 }
 
 export interface Color {
+    Action: string;
     Color_id: number;
     Description: string;
     Hex_value: string;

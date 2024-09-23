@@ -9,6 +9,7 @@ interface MapButtonsProps {
     changeMapMode: () => void;
     saveSelections: () => void;
     changeTheme: () => void;
+    changeSelectionsToDefaultColorByColorID: (colorID: number) => void;
 }
 
 function MapButtons(props: MapButtonsProps) {
@@ -16,7 +17,7 @@ function MapButtons(props: MapButtonsProps) {
 
     return (
         <div className="mapButtonsContainer">
-            <ColorMenu></ColorMenu>
+            <ColorMenu changeSelectionsToDefaultColorByColorID={props.changeSelectionsToDefaultColorByColorID}></ColorMenu>
             <button className={"mapButton theme" + (theme === Themes.Dark ? "Dark" : "Light")} onClick={props.changeMapMode}>{props.mapMode}</button>
             <button className={"mapButton theme" + (theme === Themes.Dark ? "Dark" : "Light")} onClick={props.saveSelections}>Save</button>
             <button className={"mapButton theme" + (theme === Themes.Dark ? "Dark" : "Light")} onClick={props.changeTheme}>
