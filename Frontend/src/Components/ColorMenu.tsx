@@ -1,8 +1,10 @@
-import { MouseEvent, useContext, useState } from "react";
+import { MouseEvent, useContext, useEffect, useState } from "react";
 import { Color, Themes } from "../Types";
 import { ThemeContext, useColorMenuContext } from "../context";
 import { IconPalette, IconPlus, IconTrash } from "@tabler/icons-react";
 import "./ColorMenuStyles.css"
+import { ColorsAPI } from "../APIServices/ColorsAPI";
+import { toast } from "react-toastify";
 
 export default function ColorMenu(props: { changeSelectionsToDefaultColorByColorID: (colorID: number) => void }) {
     const [colorMenu, setColorMenu] = useState(false);
@@ -11,6 +13,22 @@ export default function ColorMenu(props: { changeSelectionsToDefaultColorByColor
 
     const theme = useContext(ThemeContext);
     const colorMenuContext = useColorMenuContext();
+
+    useEffect(() => {
+        ColorsAPI.getColors()
+            .then(data => {
+                if (data instanceof TypeError) {
+                    // set default color anyway
+                    colorMenuContext.setSavedColors([{ Action: "default", Color_id: 1, Description: "Default", Hex_value: "#747bff" }])
+                    throw new Error("TypeError");
+                }
+                colorMenuContext.setSavedColors(data);
+            })
+            .catch(error => {
+                toast.error("Could not get saved colors.", { theme: theme });
+                console.log(error);
+            });
+    }, []);
 
     const onColorChange = (option: Color, value: string) => {
         const newSavedColors = colorMenuContext.savedColors.map((color) => {
@@ -74,7 +92,17 @@ export default function ColorMenu(props: { changeSelectionsToDefaultColorByColor
     }
 
     const saveColorChanges = () => {
-        console.log(colorMenuContext.savedColors);
+        ColorsAPI.patchColors(colorMenuContext.savedColors)
+            .then(data => {
+                if (data instanceof TypeError) {
+                    throw new Error("something went wrong");
+                }
+                colorMenuContext.setSavedColors(data);
+            })
+            .catch(error => {
+                console.log(error);
+                toast.error("Oops, something went wrong :(", { theme: theme });
+            });
     }
 
     return (
