@@ -22,11 +22,7 @@ function App() {
   const [selectedGNIS_IDs, setSelectedGNIS_IDs] = useState<Map<string, SelectedGNIS_ID>>(new Map());
   const [theme, setTheme] = useState(Themes.Dark);
 
-  const useTestColors = () => {
-    return [{ Action: "default", Color_id: 1, Description: "Default", Hex_value: "#747bff" }];
-  }
-
-  const [savedColors, setSavedColors] = useState<Color[]>(useTestColors());
+  const [savedColors, setSavedColors] = useState<Color[]>([{ Action: "default", Color_id: 1, Description: "Default", Hex_value: "#747bff" }]);
   const [selectedColorID, setSelectedColorID] = useState(1);
 
   const changeMapMode = () => {
