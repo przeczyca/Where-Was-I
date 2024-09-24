@@ -3,7 +3,7 @@ import { Color, Themes } from "../Types";
 import { ThemeContext, useColorMenuContext } from "../context";
 import { IconPalette, IconPlus, IconTrash } from "@tabler/icons-react";
 import "./ColorMenuStyles.css"
-import { ColorsAPI } from "../APIServices/ColorsAPI";
+import { ColorAPI } from "../APIServices/ColorAPI";
 import { toast } from "react-toastify";
 
 export default function ColorMenu(props: { changeSelectionsToDefaultColorByColorID: (colorID: number) => void }) {
@@ -15,7 +15,7 @@ export default function ColorMenu(props: { changeSelectionsToDefaultColorByColor
     const colorMenuContext = useColorMenuContext();
 
     useEffect(() => {
-        ColorsAPI.getColors()
+        ColorAPI.getColors()
             .then(data => {
                 if (data instanceof TypeError) {
                     // set default color anyway
@@ -92,7 +92,7 @@ export default function ColorMenu(props: { changeSelectionsToDefaultColorByColor
     }
 
     const saveColorChanges = () => {
-        ColorsAPI.patchColors(colorMenuContext.savedColors)
+        ColorAPI.patchColors(colorMenuContext.savedColors)
             .then(data => {
                 if (data instanceof TypeError) {
                     throw new Error("something went wrong");
