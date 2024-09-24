@@ -2,7 +2,7 @@ import { Color } from "../Types";
 
 const BASE_URL = import.meta.env.VITE_BASE_SERVER_URL;
 
-export const ColorsAPI = {
+export const ColorAPI = {
     getColors: function (): Promise<Color[]> {
         const endpoint = "/colors";
         return fetch(BASE_URL + endpoint, { method: 'GET' })
