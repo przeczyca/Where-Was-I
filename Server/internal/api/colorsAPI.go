@@ -35,60 +35,6 @@ func GetColors(db *sql.DB) (jsonBytes []byte) {
 	return
 }
 
-func CreateColors(db *sql.DB, w http.ResponseWriter, r *http.Request) (jsonBytes []byte) {
-	var newColors []structs.Color
-	if err := json.NewDecoder(r.Body).Decode(&newColors); err != nil {
-		internalServerErrorHandler(w)
-		log.Fatal(err)
-	}
-
-	response := postgres.CreateColors(db, newColors)
-
-	jsonBytes, err := json.Marshal(response)
-	if err != nil {
-		internalServerErrorHandler(w)
-		return
-	}
-
-	return
-}
-
-func UpdateColors(db *sql.DB, w http.ResponseWriter, r *http.Request) (jsonBytes []byte) {
-	var colorsToUpdate []structs.Color
-	if err := json.NewDecoder(r.Body).Decode(&colorsToUpdate); err != nil {
-		internalServerErrorHandler(w)
-		log.Fatal(err)
-	}
-
-	response := postgres.UpdateColors(db, colorsToUpdate)
-
-	jsonBytes, err := json.Marshal(response)
-	if err != nil {
-		internalServerErrorHandler(w)
-		return
-	}
-
-	return
-}
-
-func DeleteColor(db *sql.DB, w http.ResponseWriter, r *http.Request) (jsonBytes []byte) {
-	var colorsToDelete []structs.Color
-	if err := json.NewDecoder(r.Body).Decode(&colorsToDelete); err != nil {
-		internalServerErrorHandler(w)
-		log.Fatal(err)
-	}
-
-	response := postgres.DeleteColors(db, colorsToDelete)
-
-	jsonBytes, err := json.Marshal(response)
-	if err != nil {
-		internalServerErrorHandler(w)
-		return
-	}
-
-	return
-}
-
 func PatchColor(db *sql.DB, w http.ResponseWriter, r *http.Request) (jsonBytes []byte) {
 	var colorsToPatch []structs.Color
 	if err := json.NewDecoder(r.Body).Decode(&colorsToPatch); err != nil {
