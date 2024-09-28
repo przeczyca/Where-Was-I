@@ -13,7 +13,7 @@ export const ColorAPI = {
     patchColors: function (colors: Color[]): Promise<Color[]> {
         const endpoint = "/color";
         return fetch(BASE_URL + endpoint, { method: 'PATCH', body: JSON.stringify(colors) })
-            .then((response) => response.json())
+            .then(response => response.json())
             .catch(error => error);
     }
 }
