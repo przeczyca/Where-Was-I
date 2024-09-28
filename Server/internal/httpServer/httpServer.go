@@ -62,12 +62,6 @@ func (h *ColorHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case r.Method == http.MethodGet:
 		w.Write(api.GetColors(h.db))
-	case r.Method == http.MethodPost:
-		w.Write(api.CreateColors(h.db, w, r))
-	case r.Method == http.MethodPut:
-		w.Write(api.UpdateColors(h.db, w, r))
-	case r.Method == http.MethodDelete:
-		w.Write(api.DeleteColor(h.db, w, r))
 	case r.Method == http.MethodPatch:
 		w.Write(api.PatchColor(h.db, w, r))
 	}
