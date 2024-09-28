@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
+	"github.com/rs/cors"
 )
 
 func StartHttpServer() {
@@ -27,7 +28,12 @@ func StartHttpServer() {
 	mux.Handle("/color", &ColorHandler{db})
 	mux.Handle("/color/", &ColorHandler{db})
 
-	http.ListenAndServe(os.Getenv("SERVER_URL"), mux)
+	handler := cors.New(cors.Options{
+		AllowedOrigins: []string{"http://localhost:5173"},
+		AllowedMethods: []string{"GET", "POST", "PATCH"},
+	}).Handler(mux)
+
+	http.ListenAndServe(os.Getenv("SERVER_URL"), handler)
 }
 
 type VisitedHandler struct {
@@ -38,17 +44,12 @@ type ColorHandler struct {
 	db *sql.DB
 }
 
-func enableCors(w *http.ResponseWriter) {
-	(*w).Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
-}
-
 func InternalServerErrorHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusInternalServerError)
 	w.Write([]byte("500 Internal Server Error"))
 }
 
 func (h *VisitedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
 	switch {
 	case r.Method == http.MethodGet:
 		w.Write(api.GetVisited(h.db))
@@ -58,7 +59,6 @@ func (h *VisitedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ColorHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
 	switch {
 	case r.Method == http.MethodGet:
 		w.Write(api.GetColors(h.db))
@@ -68,5 +68,7 @@ func (h *ColorHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Write(api.UpdateColors(h.db, w, r))
 	case r.Method == http.MethodDelete:
 		w.Write(api.DeleteColor(h.db, w, r))
+	case r.Method == http.MethodPatch:
+		w.Write(api.PatchColor(h.db, w, r))
 	}
 }
