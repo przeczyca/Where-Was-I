@@ -14,7 +14,7 @@ export default function ColorMenu(props: { changeSelectionsToDefaultColorByColor
     const theme = useContext(ThemeContext);
     const colorMenuContext = useColorMenuContext();
 
-    useEffect(() => {
+    const getColors = () => {
         ColorAPI.getColors()
             .then(data => {
                 if (data instanceof TypeError) {
@@ -28,13 +28,17 @@ export default function ColorMenu(props: { changeSelectionsToDefaultColorByColor
                 toast.error("Could not get saved colors.", { theme: theme });
                 console.log(error);
             });
+    }
+
+    useEffect(() => {
+        getColors();
     }, []);
 
     const onColorChange = (option: Color, value: string) => {
         const newSavedColors = colorMenuContext.savedColors.map((color) => {
             if (color.Color_ID === option.Color_ID) {
                 color.HexValue = value;
-                color.Action = "changed";
+                color.Action = color.Action === "created" ? "created" : "updated";
             }
             return color;
         });
@@ -97,8 +101,8 @@ export default function ColorMenu(props: { changeSelectionsToDefaultColorByColor
                 if (data instanceof TypeError) {
                     throw new Error("something went wrong");
                 }
-                colorMenuContext.setSavedColors(data);
             })
+            .then(getColors)
             .catch(error => {
                 console.log(error);
                 toast.error("Oops, something went wrong :(", { theme: theme });
