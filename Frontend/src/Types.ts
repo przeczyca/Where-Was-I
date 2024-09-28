@@ -2,7 +2,7 @@ export interface SelectedGNIS_ID {
     GNIS_ID: string;
     Saved: boolean;
     Action: string;
-    Color_id: number;
+    Color_ID: number;
 }
 
 export interface HoverInfo {
@@ -13,9 +13,9 @@ export interface HoverInfo {
 
 export interface Color {
     Action: string;
-    Color_id: number;
+    Color_ID: number;
     Description: string;
-    Hex_value: string;
+    HexValue: string;
 }
 
 export interface ColorMenuContextInterface {

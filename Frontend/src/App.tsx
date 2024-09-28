@@ -22,7 +22,7 @@ function App() {
   const [selectedGNIS_IDs, setSelectedGNIS_IDs] = useState<Map<string, SelectedGNIS_ID>>(new Map());
   const [theme, setTheme] = useState(Themes.Dark);
 
-  const [savedColors, setSavedColors] = useState<Color[]>([{ Action: "default", Color_id: 1, Description: "Default", Hex_value: "#747bff" }]);
+  const [savedColors, setSavedColors] = useState<Color[]>([{ Action: "default", Color_ID: 1, Description: "Default", HexValue: "#747bff" }]);
   const [selectedColorID, setSelectedColorID] = useState(1);
 
   const changeMapMode = () => {
@@ -86,7 +86,7 @@ function App() {
         GNIS_ID: selection.GNIS_ID,
         Saved: selection.Saved,
         Action: selection.Action,
-        Color_id: selection.Color_id === colorID ? 1 : selection.Color_id
+        Color_ID: selection.Color_ID === colorID ? 1 : selection.Color_ID
       }
       newSelectedGNIS_IDs.set(selection.GNIS_ID, updatedSelection);
     });
@@ -110,15 +110,15 @@ function App() {
     const gnis = selectedGNIS_IDs.get(event.features[0].properties.gnis_id);
     const newGNISSelection = new Map(selectedGNIS_IDs);
     if (gnis === undefined) {
-      newGNISSelection.set(event.features[0].properties.gnis_id, { GNIS_ID: event.features[0].properties.gnis_id, Saved: false, Action: "selected", Color_id: selectedColorID });
+      newGNISSelection.set(event.features[0].properties.gnis_id, { GNIS_ID: event.features[0].properties.gnis_id, Saved: false, Action: "selected", Color_ID: selectedColorID });
     }
     else if (gnis.Saved && gnis.Action == "selected") {
       newGNISSelection.delete(gnis.GNIS_ID);
-      newGNISSelection.set(gnis.GNIS_ID, { GNIS_ID: gnis.GNIS_ID, Saved: gnis.Saved, Action: "deleted", Color_id: selectedColorID });
+      newGNISSelection.set(gnis.GNIS_ID, { GNIS_ID: gnis.GNIS_ID, Saved: gnis.Saved, Action: "deleted", Color_ID: selectedColorID });
     }
     else if (gnis.Saved && gnis.Action == "deleted") {
       newGNISSelection.delete(gnis.GNIS_ID);
-      newGNISSelection.set(gnis.GNIS_ID, { GNIS_ID: gnis.GNIS_ID, Saved: gnis.Saved, Action: "selected", Color_id: selectedColorID });
+      newGNISSelection.set(gnis.GNIS_ID, { GNIS_ID: gnis.GNIS_ID, Saved: gnis.Saved, Action: "selected", Color_ID: selectedColorID });
     }
     else if (!gnis.Saved && gnis.Action == "selected") {
       newGNISSelection.delete(gnis.GNIS_ID);
@@ -136,7 +136,7 @@ function App() {
       type: 'fill',
       paint: {
         'fill-outline-color': '#484896',
-        'fill-color': savedColors.find((color) => color.Color_id === selectedColorID)?.Hex_value,
+        'fill-color': savedColors.find((color) => color.Color_ID === selectedColorID)?.HexValue,
         'fill-opacity': 0.5
       }
     };
@@ -146,11 +146,13 @@ function App() {
     const colorsAndPlaces = new Map<number, string[]>();
     savedColors.map((color) => {
       //index 0 is hex value
-      colorsAndPlaces.set(color.Color_id, [color.Hex_value]);
+      colorsAndPlaces.set(color.Color_ID, [color.HexValue]);
     });
 
     selectedGNIS_IDs.forEach((gnis_id) => {
-      colorsAndPlaces.get(gnis_id.Color_id)?.push(gnis_id.GNIS_ID);
+      if (gnis_id.Action !== "deleted") {
+        colorsAndPlaces.get(gnis_id.Color_ID)?.push(gnis_id.GNIS_ID);
+      }
     });
 
     return colorsAndPlaces;
