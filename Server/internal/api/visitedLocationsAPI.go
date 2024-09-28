@@ -57,7 +57,7 @@ func gnis_idsToVisitedLocationsSlice(rows *sql.Rows) (savedLocations []structs.V
 		var location structs.VisitedLocation
 		location.Saved = true
 		location.Action = "selected"
-		if err := rows.Scan(&location.GNIS_ID); err != nil {
+		if err := rows.Scan(&location.GNIS_ID, &location.Color_ID); err != nil {
 			log.Fatal(err)
 		}
 
@@ -70,7 +70,7 @@ func gnis_idsToVisitedLocationsSlice(rows *sql.Rows) (savedLocations []structs.V
 func filterLocationsToSaveAndDelete(visited []structs.VisitedLocation) (locationsToDelete []structs.VisitedLocation, locationsToSave []structs.VisitedLocation, savedIDs []structs.VisitedLocation) {
 	for _, location := range visited {
 		if location.Action == "selected" {
-			savedIDs = append(savedIDs, structs.VisitedLocation{GNIS_ID: location.GNIS_ID, Saved: true, Action: "selected"})
+			savedIDs = append(savedIDs, structs.VisitedLocation{GNIS_ID: location.GNIS_ID, Color_ID: location.Color_ID, Saved: true, Action: "selected"})
 			if !location.Saved {
 				locationsToSave = append(locationsToSave, location)
 			}
