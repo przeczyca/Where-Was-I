@@ -7,9 +7,11 @@ import ColorMenu from './ColorMenu';
 interface MapButtonsProps {
     mapMode: MapModes;
     changeMapMode: () => void;
-    saveSelections: () => void;
+    saveChanges: () => void;
     changeTheme: () => void;
     changeSelectionsToDefaultColorByColorID: (colorID: number) => void;
+    selectionsChanged: boolean;
+    colorChanged: boolean;
 }
 
 function MapButtons(props: MapButtonsProps) {
@@ -19,7 +21,9 @@ function MapButtons(props: MapButtonsProps) {
         <div className="mapButtonsContainer">
             <ColorMenu changeSelectionsToDefaultColorByColorID={props.changeSelectionsToDefaultColorByColorID}></ColorMenu>
             <button className={"mapButton theme" + (theme === Themes.Dark ? "Dark" : "Light")} onClick={props.changeMapMode}>{props.mapMode}</button>
-            <button className={"mapButton theme" + (theme === Themes.Dark ? "Dark" : "Light")} onClick={props.saveSelections}>Save</button>
+            {(props.selectionsChanged || props.colorChanged) &&
+                <button className={"mapButton theme" + (theme === Themes.Dark ? "Dark" : "Light")} onClick={props.saveChanges}>Save Changes</button>
+            }
             <button className={"mapButton theme" + (theme === Themes.Dark ? "Dark" : "Light")} onClick={props.changeTheme}>
                 {theme === Themes.Dark && <IconMoon />}
                 {theme === Themes.Light && <IconSun />}

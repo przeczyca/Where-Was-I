@@ -10,6 +10,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { VisitedLocationsAPI } from './APIServices/VisitedLocationsAPI';
 import { Color, HoverInfo, MapModes, SelectedGNIS_ID, Themes } from './Types';
+import { ColorAPI } from './APIServices/ColorAPI';
 
 const ENV = import.meta.env;
 const token = ENV.VITE_MAPBOX_TOKEN_DEV;
@@ -20,10 +21,12 @@ function App() {
   const [mapMode, setMapMode] = useState<MapModes>(MapModes.States);
   const [hoverInfo, setHoverInfo] = useState<HoverInfo | null>(null);
   const [selectedGNIS_IDs, setSelectedGNIS_IDs] = useState<Map<string, SelectedGNIS_ID>>(new Map());
+  const [selectionsChanged, setSelectionsChanged] = useState(false);
   const [theme, setTheme] = useState(Themes.Dark);
 
   const [savedColors, setSavedColors] = useState<Color[]>([{ Action: "default", Color_ID: 1, Description: "Default", HexValue: "#747bff" }]);
   const [selectedColorID, setSelectedColorID] = useState(1);
+  const [colorChanged, setColorChanged] = useState(false);
 
   const changeMapMode = () => {
     switch (mapMode) {
@@ -57,26 +60,73 @@ function App() {
     return newMap;
   }
 
-  useEffect(() => {
+  const updateVisitedLocations = () => {
     VisitedLocationsAPI.getVisitedLocations()
-      .then(data => setSelectedGNIS_IDs(newSelectedGNIS_IDs(data)))
-      .catch(error => {
+      .then(data => {
+        setSelectedGNIS_IDs(newSelectedGNIS_IDs(data));
+        setSelectionsChanged(false);
+      }).catch(error => {
         toast.error("Could not get saved locations.", { theme: theme });
         console.log(error);
       });
+  }
+
+  const updateColors = () => {
+    ColorAPI.getColors()
+      .then(data => {
+        if (data instanceof TypeError) {
+          // set default color anyway
+          setSavedColors([{ Action: "default", Color_ID: 1, Description: "Default", HexValue: "#747bff" }]);
+          setColorChanged(false);
+          throw new Error("TypeError");
+        }
+        setSavedColors(data);
+      })
+      .catch(error => {
+        toast.error("Could not get saved colors.", { theme: theme });
+        console.log(error);
+      });
+  }
+
+  useEffect(() => {
+    updateVisitedLocations();
+    updateColors();
   }, []);
 
-  const saveSelections = () => {
+  const saveLocationSelections = () => {
     const selections = Array.from(selectedGNIS_IDs.values());
     VisitedLocationsAPI.saveSelectedLocations(selections)
-      .then(data => setSelectedGNIS_IDs(newSelectedGNIS_IDs(data)))
+      .then(data => {
+        setSelectedGNIS_IDs(newSelectedGNIS_IDs(data));
+        setSelectionsChanged(false);
+      })
       .catch(error => {
         toast.error("Oops, something went wrong :(", { theme: theme });
         console.log(error);
       });
+  }
 
-    //GitHub Pages error toast
-    //toast.error("GitHub Pages is front-end only, no server or database here :(", { theme: themeValue });
+  const saveColorChanges = () => {
+    ColorAPI.patchColors(savedColors)
+      .then(data => {
+        if (data instanceof TypeError) {
+          throw new Error("something went wrong");
+        }
+      })
+      .then(updateColors)
+      .catch(error => {
+        console.log(error);
+        toast.error("Oops, something went wrong :(", { theme: theme });
+      });
+  }
+
+  const saveSelections = () => {
+    if (colorChanged) {
+      saveColorChanges();
+    }
+    if (selectionsChanged) {
+      saveLocationSelections();
+    }
   }
 
   const changeSelectionsToDefaultColorByColorID = (colorID: number) => {
@@ -124,6 +174,7 @@ function App() {
       newGNISSelection.delete(gnis.GNIS_ID);
     }
     setSelectedGNIS_IDs(newGNISSelection);
+    setSelectionsChanged(true);
   }
 
   const hoverArea = (hoverInfo && hoverInfo.gnis_id) || '';
@@ -194,7 +245,7 @@ function App() {
 
   return (
     <div>
-      <ColorMenuContext.Provider value={{ savedColors, setSavedColors, selectedColorID, setSelectedColorID }}>
+      <ColorMenuContext.Provider value={{ savedColors, setSavedColors, selectedColorID, setSelectedColorID, setColorChanged }}>
         <MapBoxMap
           mapboxAccessToken={token}
           initialViewState={{
@@ -224,7 +275,9 @@ function App() {
           }
         </MapBoxMap>
         <ThemeContext.Provider value={theme}>
-          <MapButtons mapMode={mapMode} changeMapMode={changeMapMode} saveSelections={saveSelections} changeTheme={changeTheme} changeSelectionsToDefaultColorByColorID={changeSelectionsToDefaultColorByColorID} />
+          <MapButtons mapMode={mapMode} changeMapMode={changeMapMode} saveChanges={saveSelections} changeTheme={changeTheme} changeSelectionsToDefaultColorByColorID={changeSelectionsToDefaultColorByColorID}
+            selectionsChanged={selectionsChanged} colorChanged={colorChanged}
+          />
         </ThemeContext.Provider>
         <ToastContainer closeOnClick />
       </ColorMenuContext.Provider>
