@@ -1,0 +1,52 @@
+.colorMenuContainer {
+    border-radius: 8px;
+    font-size: 1em;
+    font-weight: 500;
+    font-family: inherit;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    font-size: 13px;
+    margin: 5px;
+}
+
+.colorMenuControl {
+    display: flex;
+    align-items: center;
+    padding: 0.6em 1.2em;
+}
+
+.colorMenuOptions {
+    display: flex;
+    align-items: center;
+    padding: 0.6em 1.2em;
+}
+
+.colorSquare {
+    display: inline;
+    width: 1em;
+    height: 1em;
+}
+
+.description {
+    display: inline-block;
+}
+
+.colorPicker {
+    display: inline-block;
+    margin-left: 1em;
+}
+
+.colorMenuIcon {
+    height: 1.5em;
+    width: 1.5em;
+    margin-left: 1em;
+    border-radius: 4px;
+}
+
+.colorMenuIcon:hover {
+    background: #616161;
+}
+
+.selectedColorOption {
+    border-radius: 8px;
+    background: #616161;
+}
