@@ -1,10 +1,8 @@
-import { MouseEvent, useContext, useEffect, useState } from "react";
+import { MouseEvent, useContext, useState } from "react";
 import { Color, Themes } from "../Types";
 import { ThemeContext, useColorMenuContext } from "../context";
 import { IconPalette, IconPlus, IconTrash } from "@tabler/icons-react";
 import "./ColorMenuStyles.css"
-import { ColorAPI } from "../APIServices/ColorAPI";
-import { toast } from "react-toastify";
 
 export default function ColorMenu(props: { changeSelectionsToDefaultColorByColorID: (colorID: number) => void }) {
     const [colorMenu, setColorMenu] = useState(false);
@@ -14,31 +12,12 @@ export default function ColorMenu(props: { changeSelectionsToDefaultColorByColor
     const theme = useContext(ThemeContext);
     const colorMenuContext = useColorMenuContext();
 
-    const getColors = () => {
-        ColorAPI.getColors()
-            .then(data => {
-                if (data instanceof TypeError) {
-                    // set default color anyway
-                    colorMenuContext.setSavedColors([{ Action: "default", Color_ID: 1, Description: "Default", HexValue: "#747bff" }])
-                    throw new Error("TypeError");
-                }
-                colorMenuContext.setSavedColors(data);
-            })
-            .catch(error => {
-                toast.error("Could not get saved colors.", { theme: theme });
-                console.log(error);
-            });
-    }
-
-    useEffect(() => {
-        getColors();
-    }, []);
-
     const onColorChange = (option: Color, value: string) => {
         const newSavedColors = colorMenuContext.savedColors.map((color) => {
             if (color.Color_ID === option.Color_ID) {
                 color.HexValue = value;
                 color.Action = color.Action === "created" ? "created" : "updated";
+                colorMenuContext.setColorChanged(true);
             }
             return color;
         });
@@ -49,6 +28,7 @@ export default function ColorMenu(props: { changeSelectionsToDefaultColorByColor
         colorMenuContext.setSavedColors([...colorMenuContext.savedColors, { Action: "created", Color_ID: newColorIDCounter, Description: "New Color", HexValue: "#747bff" }]);
         colorMenuContext.setSelectedColorID(newColorIDCounter);
         setNewColorIDCounter(newColorIDCounter - 1);
+        colorMenuContext.setColorChanged(true);
     }
 
     const deleteColor = (e: MouseEvent, toDelete: Color) => {
@@ -78,6 +58,7 @@ export default function ColorMenu(props: { changeSelectionsToDefaultColorByColor
         }
 
         props.changeSelectionsToDefaultColorByColorID(toDelete.Color_ID);
+        colorMenuContext.setColorChanged(true);
     }
 
     const onDescriptionChange = (value: string) => {
@@ -86,27 +67,14 @@ export default function ColorMenu(props: { changeSelectionsToDefaultColorByColor
 
     const onDescriptionBlur = () => {
         const newSavedColors = colorMenuContext.savedColors.map((color) => {
-            if (color.Color_ID === colorMenuContext.selectedColorID) {
+            if (color.Color_ID === colorMenuContext.selectedColorID && color.Description !== currentDescription) {
                 color.Description = currentDescription;
                 color.Action = color.Action === "created" ? "created" : "updated";
+                colorMenuContext.setColorChanged(true);
             }
             return color;
         });
         colorMenuContext.setSavedColors(newSavedColors);
-    }
-
-    const saveColorChanges = () => {
-        ColorAPI.patchColors(colorMenuContext.savedColors)
-            .then(data => {
-                if (data instanceof TypeError) {
-                    throw new Error("something went wrong");
-                }
-            })
-            .then(getColors)
-            .catch(error => {
-                console.log(error);
-                toast.error("Oops, something went wrong :(", { theme: theme });
-            });
     }
 
     return (
@@ -121,7 +89,6 @@ export default function ColorMenu(props: { changeSelectionsToDefaultColorByColor
                 <div className={"colorMenuContainer theme" + (theme === Themes.Dark ? "Dark" : "Light")}>
                     <div className="colorMenuControl">
                         <IconPalette className="palleteIcon" onClick={() => setColorMenu(!colorMenu)} />
-                        <button className={"mapButton theme" + (theme === Themes.Dark ? "Dark" : "Light")} onClick={() => saveColorChanges()}>Save Changes</button>
                         <div
                             className="colorSquare"
                             style={{

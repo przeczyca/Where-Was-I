@@ -23,6 +23,7 @@ export interface ColorMenuContextInterface {
     setSavedColors: React.Dispatch<React.SetStateAction<Color[]>>,
     selectedColorID: number,
     setSelectedColorID: React.Dispatch<React.SetStateAction<number>>
+    setColorChanged: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 export enum MapModes {
