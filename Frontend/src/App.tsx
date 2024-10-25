@@ -89,6 +89,8 @@ function App() {
   }
 
   useEffect(() => {
+    console.log("asdf");
+    console.log(stateSource);
     updateVisitedLocations();
     updateColors();
   }, []);
