@@ -13,7 +13,7 @@ import (
 )
 
 func StartHttpServer() {
-	err := godotenv.Load("../internal/configs/.env")
+	err := godotenv.Load("/app/internal/configs/.env")
 	if err != nil {
 		log.Fatal(err)
 	}
