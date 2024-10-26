@@ -3,3 +3,5 @@ Database
 .env
 
 Dockerfile
+
+createAndPushDocker.sh
