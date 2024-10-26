@@ -26,7 +26,6 @@ jobs:
           echo VITE_STATE_SOURCE = ${{vars.VITE_STATE_SOURCE}} >> .env
           echo VITE_COUNTY_SOURCE = ${{vars.VITE_COUNTY_SOURCE}} >> .env
           echo VITE_BASE_SERVER_URL = ${{ vars.VITE_BASE_SERVER_URL}} >> .env
-          cat .env
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
