@@ -13,7 +13,7 @@ import (
 )
 
 func StartHttpServer() {
-	err := godotenv.Load("../internal/configs/.env")
+	err := godotenv.Load("/app/internal/configs/.env")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -28,10 +28,7 @@ func StartHttpServer() {
 	mux.Handle("/color", &ColorHandler{db})
 	mux.Handle("/color/", &ColorHandler{db})
 
-	handler := cors.New(cors.Options{
-		AllowedOrigins: []string{"http://localhost:5173"},
-		AllowedMethods: []string{"GET", "POST", "PATCH"},
-	}).Handler(mux)
+	handler := cors.AllowAll().Handler(mux)
 
 	http.ListenAndServe(os.Getenv("SERVER_URL"), handler)
 }
