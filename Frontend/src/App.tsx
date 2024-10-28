@@ -93,7 +93,7 @@ function App() {
     updateColors();
   }, []);
 
-  const saveLocationSelections = () => {
+  const saveLocationSelections = () => new Promise(() => {
     const selections = Array.from(selectedGNIS_IDs.values());
     VisitedLocationsAPI.saveSelectedLocations(selections)
       .then(data => {
@@ -104,9 +104,9 @@ function App() {
         toast.error("Oops, something went wrong :(", { theme: theme });
         console.log(error);
       });
-  }
+  })
 
-  const saveColorChanges = () => {
+  const saveColorChanges = () => new Promise(() => {
     ColorAPI.patchColors(savedColors)
       .then(data => {
         if (data instanceof TypeError) {
@@ -118,14 +118,14 @@ function App() {
         console.log(error);
         toast.error("Oops, something went wrong :(", { theme: theme });
       });
-  }
+  })
 
-  const saveSelections = () => {
+  async function saveSelections() {
     if (colorChanged) {
-      saveColorChanges();
+      await saveColorChanges();
     }
     if (selectionsChanged) {
-      saveLocationSelections();
+      await saveLocationSelections();
     }
   }
 
