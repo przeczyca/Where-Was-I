@@ -4,19 +4,13 @@ import (
 	"Where-Was-I-Server/internal/api"
 	"Where-Was-I-Server/internal/postgres"
 	"database/sql"
-	"log"
 	"net/http"
 	"os"
 
-	"github.com/joho/godotenv"
 	"github.com/rs/cors"
 )
 
 func StartHttpServer() {
-	err := godotenv.Load("../internal/configs/.env")
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	db := postgres.ConnectToDB()
 
@@ -28,10 +22,7 @@ func StartHttpServer() {
 	mux.Handle("/color", &ColorHandler{db})
 	mux.Handle("/color/", &ColorHandler{db})
 
-	handler := cors.New(cors.Options{
-		AllowedOrigins: []string{"http://localhost:5173"},
-		AllowedMethods: []string{"GET", "POST", "PATCH"},
-	}).Handler(mux)
+	handler := cors.AllowAll().Handler(mux)
 
 	http.ListenAndServe(os.Getenv("SERVER_URL"), handler)
 }
