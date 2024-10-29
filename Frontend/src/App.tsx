@@ -71,7 +71,7 @@ function App() {
       });
   }
 
-  const updateColors = () => {
+  const updateColors = () => new Promise<Color[]>(resolve => {
     ColorAPI.getColors()
       .then(data => {
         if (data instanceof TypeError) {
@@ -81,24 +81,49 @@ function App() {
           throw new Error("TypeError");
         }
         setSavedColors(data);
+        resolve(data);
       })
       .catch(error => {
         toast.error("Could not get saved colors.", { theme: theme });
         console.log(error);
       });
-  }
+  })
 
   useEffect(() => {
     updateVisitedLocations();
     updateColors();
   }, []);
 
-  const saveLocationSelections = () => new Promise(() => {
+  const saveLocationSelections = (updatedColors: Color[]) => new Promise(resolve => {
     const selections = Array.from(selectedGNIS_IDs.values());
+    let index = 0;
+    const colorIDMap = new Map<number, number>();
+    savedColors.forEach((savedColor) => {
+      if (savedColor.Action === "created") {
+        colorIDMap.set(savedColor.Color_ID, updatedColors[index].Color_ID);
+        index += 1;
+      }
+      else if (savedColor.Action !== "deleted") {
+        index += 1;
+      }
+    });
+
+    selections.forEach((selection, index) => {
+      if (selection.Color_ID < 0 && colorIDMap.get(selection.Color_ID) !== undefined) {
+        selections[index] = {
+          GNIS_ID: selection.GNIS_ID,
+          Saved: selection.Saved,
+          Action: selection.Action,
+          Color_ID: colorIDMap.get(selection.Color_ID) as number
+        }
+      }
+    });
+
     VisitedLocationsAPI.saveSelectedLocations(selections)
       .then(data => {
         setSelectedGNIS_IDs(newSelectedGNIS_IDs(data));
         setSelectionsChanged(false);
+        resolve("locations saved");
       })
       .catch(error => {
         toast.error("Oops, something went wrong :(", { theme: theme });
@@ -106,14 +131,18 @@ function App() {
       });
   })
 
-  const saveColorChanges = () => new Promise(() => {
+  const saveColorChanges = () => new Promise<Color[]>(resolve => {
     ColorAPI.patchColors(savedColors)
       .then(data => {
         if (data instanceof TypeError) {
           throw new Error("something went wrong");
         }
+        return data;
       })
-      .then(updateColors)
+      .then(async () => {
+        const updatedColors = await updateColors();
+        resolve(updatedColors);
+      })
       .catch(error => {
         console.log(error);
         toast.error("Oops, something went wrong :(", { theme: theme });
@@ -121,11 +150,12 @@ function App() {
   })
 
   async function saveSelections() {
+    let updatedColors: Color[] = [];
     if (colorChanged) {
-      await saveColorChanges();
+      updatedColors = await saveColorChanges();
     }
     if (selectionsChanged) {
-      await saveLocationSelections();
+      await saveLocationSelections(updatedColors);
     }
   }
 
