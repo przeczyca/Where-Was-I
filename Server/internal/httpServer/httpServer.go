@@ -4,19 +4,13 @@ import (
 	"Where-Was-I-Server/internal/api"
 	"Where-Was-I-Server/internal/postgres"
 	"database/sql"
-	"log"
 	"net/http"
 	"os"
 
-	"github.com/joho/godotenv"
 	"github.com/rs/cors"
 )
 
 func StartHttpServer() {
-	err := godotenv.Load("/app/internal/configs/.env")
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	db := postgres.ConnectToDB()
 
