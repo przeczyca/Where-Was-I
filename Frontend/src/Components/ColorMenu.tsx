@@ -78,15 +78,15 @@ export default function ColorMenu(props: { changeSelectionsToDefaultColorByColor
     }
 
     return (
-        <div>
+        <div data-testid="color-menu">
             {!colorMenu &&
-                <button className={"mapButton theme" + (theme === Themes.Dark ? "Dark" : "Light")} onClick={() => setColorMenu(!colorMenu)}>
+                <button data-testid="color-menu-closed" className={"mapButton theme" + (theme === Themes.Dark ? "Dark" : "Light")} onClick={() => setColorMenu(!colorMenu)}>
                     <IconPalette />
                     <div className="colorSquare" style={{ backgroundColor: colorMenuContext.savedColors.find((color) => color.Color_ID === colorMenuContext.selectedColorID)?.HexValue }} />
                 </button>
             }
             {colorMenu &&
-                <div className={"colorMenuContainer theme" + (theme === Themes.Dark ? "Dark" : "Light")}>
+                <div data-testid="color-menu-open" className={"colorMenuContainer theme" + (theme === Themes.Dark ? "Dark" : "Light")}>
                     <div className="colorMenuControl">
                         <IconPalette className="palleteIcon" onClick={() => setColorMenu(!colorMenu)} />
                         <div
