@@ -159,20 +159,6 @@ function App() {
     }
   }
 
-  const changeSelectionsToDefaultColorByColorID = (colorID: number) => {
-    const newSelectedGNIS_IDs = new Map(selectedGNIS_IDs);
-    newSelectedGNIS_IDs.forEach((selection) => {
-      const updatedSelection = {
-        GNIS_ID: selection.GNIS_ID,
-        Saved: selection.Saved,
-        Action: selection.Action,
-        Color_ID: selection.Color_ID === colorID ? 1 : selection.Color_ID
-      }
-      newSelectedGNIS_IDs.set(selection.GNIS_ID, updatedSelection);
-    });
-    setSelectedGNIS_IDs(newSelectedGNIS_IDs);
-  }
-
   const onHover = useCallback((event: mapboxgl.MapMouseEvent & mapboxgl.EventData) => {
     const area = event.features && event.features[0];
     setHoverInfo({
@@ -275,7 +261,7 @@ function App() {
 
   return (
     <div>
-      <ColorMenuContext.Provider value={{ savedColors, setSavedColors, selectedColorID, setSelectedColorID, setColorChanged }}>
+      <ColorMenuContext.Provider value={{ savedColors, setSavedColors, selectedColorID, setSelectedColorID, selectedGNIS_IDs, setSelectedGNIS_IDs, setColorChanged }}>
         <MapBoxMap
           mapboxAccessToken={token}
           initialViewState={{
@@ -305,7 +291,7 @@ function App() {
           }
         </MapBoxMap>
         <ThemeContext.Provider value={theme}>
-          <MapButtons mapMode={mapMode} changeMapMode={changeMapMode} saveChanges={saveSelections} changeTheme={changeTheme} changeSelectionsToDefaultColorByColorID={changeSelectionsToDefaultColorByColorID}
+          <MapButtons mapMode={mapMode} changeMapMode={changeMapMode} saveChanges={saveSelections} changeTheme={changeTheme}
             selectionsChanged={selectionsChanged} colorChanged={colorChanged}
           />
         </ThemeContext.Provider>
