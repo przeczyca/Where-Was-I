@@ -88,7 +88,7 @@ export default function ColorMenu(props: { changeSelectionsToDefaultColorByColor
             {colorMenu &&
                 <div data-testid="color-menu-open" className={"colorMenuContainer theme" + (theme === Themes.Dark ? "Dark" : "Light")}>
                     <div className="colorMenuControl">
-                        <IconPalette className="palleteIcon" onClick={() => setColorMenu(!colorMenu)} />
+                        <IconPalette data-testid="palette-icon-open" className="palleteIcon" onClick={() => setColorMenu(!colorMenu)} />
                         <div
                             className="colorSquare"
                             style={{
@@ -97,12 +97,13 @@ export default function ColorMenu(props: { changeSelectionsToDefaultColorByColor
                                 })?.HexValue
                             }}
                         />
-                        <IconPlus onClick={() => addColor()} />
+                        <IconPlus data-testid="add-new-color" onClick={() => addColor()} />
                     </div>
 
                     {colorMenuContext.savedColors.map((colorOption) => {
                         if (colorOption.Action !== "deleted") {
                             return <div
+                                data-testid="color-option"
                                 className={"colorMenuOptions " + ((colorOption.Color_ID === colorMenuContext.selectedColorID) ? "selectedColorOption" : "")}
                                 key={colorOption.Color_ID}
                                 onClick={() => colorMenuContext.setSelectedColorID(colorOption.Color_ID)}
@@ -129,7 +130,7 @@ export default function ColorMenu(props: { changeSelectionsToDefaultColorByColor
                                     disabled={colorOption.Action === "default"}
                                 />
                                 {colorOption.Color_ID === colorMenuContext.selectedColorID && colorOption.Action !== "default" &&
-                                    <IconTrash onClick={(e) => deleteColor(e, colorOption)} />
+                                    <IconTrash data-testid="delete-color" onClick={(e) => deleteColor(e, colorOption)} />
                                 }
                             </div>
                         }
