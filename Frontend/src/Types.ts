@@ -23,6 +23,8 @@ export interface ColorMenuContextInterface {
     setSavedColors: React.Dispatch<React.SetStateAction<Color[]>>,
     selectedColorID: number,
     setSelectedColorID: React.Dispatch<React.SetStateAction<number>>
+    selectedGNIS_IDs: Map<string, SelectedGNIS_ID>
+    setSelectedGNIS_IDs: React.Dispatch<React.SetStateAction<Map<string, SelectedGNIS_ID>>>
     setColorChanged: React.Dispatch<React.SetStateAction<boolean>>
 }
 

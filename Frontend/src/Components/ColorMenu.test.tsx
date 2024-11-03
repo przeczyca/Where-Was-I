@@ -12,24 +12,10 @@ function ColorMenuTestWrapper() {
     const [selectedColorID, setSelectedColorID] = React.useState<number>(1);
     const [, setColorChanged] = React.useState<boolean>(false);
 
-    const changeSelectionsToDefaultColorByColorID = (colorID: number) => {
-        const newSelectedGNIS_IDs = new Map(selectedGNIS_IDs);
-        newSelectedGNIS_IDs.forEach((selection) => {
-            const updatedSelection = {
-                GNIS_ID: selection.GNIS_ID,
-                Saved: selection.Saved,
-                Action: selection.Action,
-                Color_ID: selection.Color_ID === colorID ? 1 : selection.Color_ID
-            }
-            newSelectedGNIS_IDs.set(selection.GNIS_ID, updatedSelection);
-        });
-        setSelectedGNIS_IDs(newSelectedGNIS_IDs);
-    }
-
     return (
         <div>
-            <ColorMenuContext.Provider value={{ savedColors, setSavedColors, selectedColorID, setSelectedColorID, setColorChanged }}>
-                <ColorMenu changeSelectionsToDefaultColorByColorID={changeSelectionsToDefaultColorByColorID} />
+            <ColorMenuContext.Provider value={{ savedColors, setSavedColors, selectedColorID, setSelectedColorID, selectedGNIS_IDs, setSelectedGNIS_IDs, setColorChanged }}>
+                <ColorMenu />
             </ColorMenuContext.Provider>
         </div>
     );

@@ -4,7 +4,7 @@ import { ThemeContext, useColorMenuContext } from "../context";
 import { IconPalette, IconPlus, IconTrash } from "@tabler/icons-react";
 import "./ColorMenuStyles.css"
 
-export default function ColorMenu(props: { changeSelectionsToDefaultColorByColorID: (colorID: number) => void }) {
+export default function ColorMenu() {
     const [colorMenu, setColorMenu] = useState(false);
     const [newColorIDCounter, setNewColorIDCounter] = useState(-1);
     const [currentDescription, setCurrentDescription] = useState("");
@@ -29,6 +29,20 @@ export default function ColorMenu(props: { changeSelectionsToDefaultColorByColor
         colorMenuContext.setSelectedColorID(newColorIDCounter);
         setNewColorIDCounter(newColorIDCounter - 1);
         colorMenuContext.setColorChanged(true);
+    }
+
+    const changeSelectionsToDefaultColorByColorID = (colorID: number) => {
+        const newSelectedGNIS_IDs = new Map(colorMenuContext.selectedGNIS_IDs);
+        newSelectedGNIS_IDs.forEach((selection) => {
+            const updatedSelection = {
+                GNIS_ID: selection.GNIS_ID,
+                Saved: selection.Saved,
+                Action: selection.Action,
+                Color_ID: selection.Color_ID === colorID ? 1 : selection.Color_ID
+            }
+            newSelectedGNIS_IDs.set(selection.GNIS_ID, updatedSelection);
+        });
+        colorMenuContext.setSelectedGNIS_IDs(newSelectedGNIS_IDs);
     }
 
     const deleteColor = (e: MouseEvent, toDelete: Color) => {
@@ -57,7 +71,7 @@ export default function ColorMenu(props: { changeSelectionsToDefaultColorByColor
             colorMenuContext.setSavedColors(colorMenuContext.savedColors.filter((color) => color.Color_ID !== colorMenuContext.selectedColorID));
         }
 
-        props.changeSelectionsToDefaultColorByColorID(toDelete.Color_ID);
+        changeSelectionsToDefaultColorByColorID(toDelete.Color_ID);
         colorMenuContext.setColorChanged(true);
     }
 
