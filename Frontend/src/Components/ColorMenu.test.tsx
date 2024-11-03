@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { describe, expect, it } from 'vitest';
+import { expect, test } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ColorMenu from './ColorMenu';
@@ -35,48 +35,33 @@ function ColorMenuTestWrapper() {
     );
 }
 
-describe("Color menu", () => {
-    it("renders color menu closed", () => {
-        render(<ColorMenuTestWrapper />);
-        const closedMenu = screen.getByTestId("color-menu-closed");
-        expect(closedMenu).toBeTruthy();
-    });
+test("Color menu", () => {
+    render(<ColorMenuTestWrapper />);
 
-    it("color menu opens and closes", () => {
-        render(<ColorMenuTestWrapper />);
-        let elementToTest = screen.getByTestId("color-menu-closed");
-        fireEvent.click(elementToTest);
-        elementToTest = screen.getByTestId("color-menu-open");
-        expect(elementToTest).toBeTruthy();
-        elementToTest = screen.getByTestId("palette-icon-open");
-        fireEvent.click(elementToTest);
-        elementToTest = screen.getByTestId("color-menu-closed");
-        expect(elementToTest).toBeTruthy();
-    });
+    // Color menu renders
+    const closedMenuButton = screen.getByTestId("color-menu-closed");
+    expect(screen.getByTestId("color-menu-closed")).toBeInTheDocument();
 
-    it("default color is in color menu", () => {
-        render(<ColorMenuTestWrapper />);
-        fireEvent.click(screen.getByTestId("color-menu-closed"));
-        let elementsToTest = screen.getAllByTestId("color-option");
-        expect(elementsToTest.length).toEqual(1);
-        let inputElement = screen.getByDisplayValue("Default");
-        expect(inputElement).toBeInTheDocument();
-    });
+    // Color menu opens
+    fireEvent.click(closedMenuButton);
+    expect(screen.getByTestId("color-menu-open")).toBeInTheDocument();
 
-    it("new color is added and deleted", () => {
-        render(<ColorMenuTestWrapper />);
-        fireEvent.click(screen.getByTestId("color-menu-closed"));
-        let elementToTest = screen.getByTestId("add-new-color");
-        fireEvent.click(elementToTest);
-        let elementsToTest = screen.getAllByTestId("color-option");
-        expect(elementsToTest.length).toEqual(2);
-        elementToTest = screen.getByDisplayValue("New Color");
-        expect(elementToTest).toBeInTheDocument();
-        elementToTest = screen.getByTestId("delete-color");
-        fireEvent.click(elementToTest);
-        elementsToTest = screen.getAllByTestId("color-option");
-        expect(elementsToTest.length).toEqual(1);
-        elementToTest = screen.getByDisplayValue("Default");
-        expect(elementToTest).toBeInTheDocument();
-    })
+    // Has only the default color
+    const colorOptions = screen.getAllByTestId("color-option");
+    expect(colorOptions.length).toEqual(1);
+    expect(screen.getByDisplayValue("Default")).toBeInTheDocument();
+
+    // Add new color
+    fireEvent.click(screen.getByTestId("add-new-color"));
+    expect(screen.getAllByTestId("color-option").length).toEqual(2);
+    expect(screen.getByDisplayValue("New Color")).toBeInTheDocument();
+
+    // Delete new color
+    fireEvent.click(screen.getByTestId("delete-color"));
+    expect(screen.getAllByTestId("color-option").length).toEqual(1);
+    expect(screen.getByDisplayValue("Default")).toBeInTheDocument();
+
+    // Color menu closes
+    fireEvent.click(screen.getByTestId("palette-icon-open"));
+    expect(screen.getByTestId("color-menu-closed")).toBeInTheDocument();
 });
