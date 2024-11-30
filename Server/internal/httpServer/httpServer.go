@@ -35,17 +35,32 @@ type ColorHandler struct {
 	db *sql.DB
 }
 
-func InternalServerErrorHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusInternalServerError)
-	w.Write([]byte("500 Internal Server Error"))
+func InternalServerErrorHandler(w http.ResponseWriter) {
+	InternalServerErrorHandlerWithContext(w, "")
+}
+
+func InternalServerErrorHandlerWithContext(w http.ResponseWriter, errorContext string) {
+	newErrorString := "500 Internal Server Error"
+	if len(errorContext) > 0 {
+		newErrorString += ": " + errorContext
+	}
+	http.Error(w, newErrorString, http.StatusInternalServerError)
 }
 
 func (h *VisitedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case r.Method == http.MethodGet:
-		w.Write(api.GetVisited(h.db))
+		if jsonBytes, err := api.GetVisited(h.db); err != nil {
+			InternalServerErrorHandlerWithContext(w, "Could not get visited locations")
+		} else {
+			w.Write(jsonBytes)
+		}
 	case r.Method == http.MethodPost:
-		w.Write(api.UpdateVisited(h.db, w, r))
+		if jsonBytes, err := api.UpdateVisited(h.db, w, r); err != nil {
+			InternalServerErrorHandlerWithContext(w, "Could not update visited locations")
+		} else {
+			w.Write(jsonBytes)
+		}
 	}
 }
 

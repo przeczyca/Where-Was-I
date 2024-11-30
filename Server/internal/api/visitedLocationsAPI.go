@@ -14,33 +14,39 @@ type VisitedLocationService interface {
 	UpdateVisited(db *sql.DB, w http.ResponseWriter, r *http.Request) (jsonBytes []byte)
 }
 
-func GetVisited(db *sql.DB) (jsonBytes []byte) {
-	rows := postgres.GetAllVisitedLocations(db)
+func GetVisited(db *sql.DB) (jsonBytes []byte, err error) {
+	rows, err := postgres.GetAllVisitedLocations(db)
+	if err != nil {
+		return
+	}
 	defer rows.Close()
 
-	jsonBytes, err := json.Marshal(gnis_idsToVisitedLocationsSlice(rows))
+	jsonBytes, err = json.Marshal(gnis_idsToVisitedLocationsSlice(rows))
 	if err != nil {
-		log.Fatal(err)
+		return
 	}
 
 	return
 }
 
-func UpdateVisited(db *sql.DB, w http.ResponseWriter, r *http.Request) (jsonBytes []byte) {
+func UpdateVisited(db *sql.DB, w http.ResponseWriter, r *http.Request) (jsonBytes []byte, err error) {
 	visited := decodeIncomingJSON(w, r)
 
 	locationsToDelete, locationsToSave, savedIDs := filterLocationsToSaveAndDelete(visited)
 
 	if len(locationsToDelete) > 0 {
-		postgres.DeleteVisitedLocations(db, locationsToDelete)
+		if err = postgres.DeleteVisitedLocations(db, locationsToDelete); err != nil {
+			return
+		}
 	}
 	if len(locationsToSave) > 0 {
-		postgres.InsertVisitedLocations(db, locationsToSave)
+		if err = postgres.InsertVisitedLocations(db, locationsToSave); err != nil {
+			return
+		}
 	}
 
-	jsonBytes, err := json.Marshal(savedIDs)
+	jsonBytes, err = json.Marshal(savedIDs)
 	if err != nil {
-		internalServerErrorHandler(w)
 		return
 	}
 

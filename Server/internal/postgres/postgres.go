@@ -26,17 +26,18 @@ func ConnectToDB() (db *sql.DB) {
 	return
 }
 
-func GetAllVisitedLocations(db *sql.DB) (rows *sql.Rows) {
+func GetAllVisitedLocations(db *sql.DB) (rows *sql.Rows, err error) {
 	query := "SELECT * FROM visited_locations;"
 
-	rows, err := db.Query(query)
+	rows, err = db.Query(query)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 	return
 }
 
-func InsertVisitedLocations(db *sql.DB, locationsToSave []structs.VisitedLocation) {
+func InsertVisitedLocations(db *sql.DB, locationsToSave []structs.VisitedLocation) (err error) {
 	var inserts strings.Builder
 
 	for _, location := range locationsToSave {
@@ -50,14 +51,17 @@ func InsertVisitedLocations(db *sql.DB, locationsToSave []structs.VisitedLocatio
 
 	fullQuery.WriteString("INSERT INTO visited_locations (gnis_id, color_id) VALUES " + inserts.String() + ";")
 
-	_, err := db.Query(fullQuery.String())
+	_, err = db.Query(fullQuery.String())
 	if err != nil {
-		fmt.Println(fullQuery.String())
-		log.Fatal(err)
+		log.Println(err)
+		log.Printf("Query: %s", fullQuery.String())
+		return
 	}
+
+	return
 }
 
-func DeleteVisitedLocations(db *sql.DB, locationsToDelete []structs.VisitedLocation) {
+func DeleteVisitedLocations(db *sql.DB, locationsToDelete []structs.VisitedLocation) (err error) {
 	var deleteQuery strings.Builder
 
 	for _, location := range locationsToDelete {
@@ -74,11 +78,14 @@ func DeleteVisitedLocations(db *sql.DB, locationsToDelete []structs.VisitedLocat
 		fullQuery.WriteString(deleteQuery.String() + ");")
 	}
 
-	_, err := db.Query(fullQuery.String())
+	_, err = db.Query(fullQuery.String())
 	if err != nil {
-		fmt.Println(fullQuery.String())
-		log.Fatal(err)
+		log.Println(err)
+		log.Printf("Query: %s", fullQuery.String())
+		return
 	}
+
+	return
 }
 
 func GetAllColors(db *sql.DB) (rows *sql.Rows) {
