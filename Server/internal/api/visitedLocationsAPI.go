@@ -30,7 +30,11 @@ func GetVisited(db *sql.DB) (jsonBytes []byte, err error) {
 }
 
 func UpdateVisited(db *sql.DB, w http.ResponseWriter, r *http.Request) (jsonBytes []byte, err error) {
-	visited := decodeIncomingJSON(w, r)
+	var visited []structs.VisitedLocation
+	if err = decodeIncomingJSON(r, &visited); err != nil {
+		log.Println(err)
+		return
+	}
 
 	locationsToDelete, locationsToSave, savedIDs := filterLocationsToSaveAndDelete(visited)
 
@@ -51,11 +55,6 @@ func UpdateVisited(db *sql.DB, w http.ResponseWriter, r *http.Request) (jsonByte
 	}
 
 	return
-}
-
-func internalServerErrorHandler(w http.ResponseWriter) {
-	w.WriteHeader(http.StatusInternalServerError)
-	w.Write([]byte("500 Internal Server Error"))
 }
 
 func gnis_idsToVisitedLocationsSlice(rows *sql.Rows) (savedLocations []structs.VisitedLocation) {
@@ -83,15 +82,6 @@ func filterLocationsToSaveAndDelete(visited []structs.VisitedLocation) (location
 		} else {
 			locationsToDelete = append(locationsToDelete, location)
 		}
-	}
-
-	return
-}
-
-func decodeIncomingJSON(w http.ResponseWriter, r *http.Request) (visited []structs.VisitedLocation) {
-	if err := json.NewDecoder(r.Body).Decode(&visited); err != nil {
-		internalServerErrorHandler(w)
-		log.Fatal(err)
 	}
 
 	return

@@ -35,6 +35,14 @@ type ColorHandler struct {
 	db *sql.DB
 }
 
+func checkForErrorAndWrite(jsonBytes []byte, err error, w http.ResponseWriter) {
+	if err != nil {
+		InternalServerErrorHandler(w)
+	} else {
+		w.Write(jsonBytes)
+	}
+}
+
 func InternalServerErrorHandler(w http.ResponseWriter) {
 	InternalServerErrorHandlerWithContext(w, "")
 }
@@ -50,25 +58,21 @@ func InternalServerErrorHandlerWithContext(w http.ResponseWriter, errorContext s
 func (h *VisitedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case r.Method == http.MethodGet:
-		if jsonBytes, err := api.GetVisited(h.db); err != nil {
-			InternalServerErrorHandlerWithContext(w, "Could not get visited locations")
-		} else {
-			w.Write(jsonBytes)
-		}
+		jsonBytes, err := api.GetVisited(h.db)
+		checkForErrorAndWrite(jsonBytes, err, w)
 	case r.Method == http.MethodPost:
-		if jsonBytes, err := api.UpdateVisited(h.db, w, r); err != nil {
-			InternalServerErrorHandlerWithContext(w, "Could not update visited locations")
-		} else {
-			w.Write(jsonBytes)
-		}
+		jsonBytes, err := api.UpdateVisited(h.db, w, r)
+		checkForErrorAndWrite(jsonBytes, err, w)
 	}
 }
 
 func (h *ColorHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case r.Method == http.MethodGet:
-		w.Write(api.GetColors(h.db))
+		jsonBytes, err := api.GetColors((h.db))
+		checkForErrorAndWrite(jsonBytes, err, w)
 	case r.Method == http.MethodPatch:
-		w.Write(api.PatchColor(h.db, w, r))
+		jsonBytes, err := api.PatchColor(h.db, w, r)
+		checkForErrorAndWrite(jsonBytes, err, w)
 	}
 }
