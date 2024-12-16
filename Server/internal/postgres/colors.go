@@ -8,10 +8,10 @@ import (
 	"strings"
 )
 
-func GetAllColors(db *sql.DB) (rows *sql.Rows) {
+func GetAllColors(db *sql.DB) (rows *sql.Rows, err error) {
 	query := "SELECT * FROM colors;"
 
-	rows, err := db.Query(query)
+	rows, err = db.Query(query)
 	if err != nil {
 		log.Println(err)
 		return
@@ -20,7 +20,7 @@ func GetAllColors(db *sql.DB) (rows *sql.Rows) {
 	return
 }
 
-func PatchColor(db *sql.DB, colors []structs.Color) (rows *sql.Rows) {
+func PatchColor(db *sql.DB, colors []structs.Color) (rows *sql.Rows, err error) {
 	// Filter colors by action
 	var createdColorIds strings.Builder
 	var updatedColorIds strings.Builder
@@ -80,7 +80,7 @@ func PatchColor(db *sql.DB, colors []structs.Color) (rows *sql.Rows) {
 		)
 	}
 
-	rows, err := db.Query(fullQuery.String())
+	rows, err = db.Query(fullQuery.String())
 	if err != nil {
 		log.Println(err)
 		return

@@ -10,7 +10,10 @@ import (
 )
 
 func GetColors(db *sql.DB) (jsonBytes []byte, err error) {
-	rows := postgres.GetAllColors(db)
+	rows, err := postgres.GetAllColors(db)
+	if err != nil {
+		return
+	}
 	defer rows.Close()
 
 	var colors []structs.Color
@@ -44,7 +47,10 @@ func PatchColor(db *sql.DB, w http.ResponseWriter, r *http.Request) (jsonBytes [
 		return
 	}
 
-	response := postgres.PatchColor(db, colorsToPatch)
+	response, err := postgres.PatchColor(db, colorsToPatch)
+	if err != nil {
+		return
+	}
 
 	jsonBytes, err = json.Marshal(response)
 	if err != nil {
