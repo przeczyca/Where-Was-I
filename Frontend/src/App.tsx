@@ -126,7 +126,7 @@ function App() {
         resolve("locations saved");
       })
       .catch(error => {
-        toast.error("Oops, something went wrong :(", { theme: theme });
+        toast.error("Could not update visited locations", { theme: theme });
         console.log(error);
       });
   })
@@ -135,7 +135,7 @@ function App() {
     ColorAPI.patchColors(savedColors)
       .then(data => {
         if (data instanceof TypeError) {
-          throw new Error("something went wrong");
+          throw new Error("TypeError while updating colors");
         }
         return data;
       })
@@ -145,7 +145,7 @@ function App() {
       })
       .catch(error => {
         console.log(error);
-        toast.error("Oops, something went wrong :(", { theme: theme });
+        toast.error("Could not update colors", { theme: theme });
       });
   })
 
