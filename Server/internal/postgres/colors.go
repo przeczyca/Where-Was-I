@@ -13,7 +13,8 @@ func GetAllColors(db *sql.DB) (rows *sql.Rows) {
 
 	rows, err := db.Query(query)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 
 	return
@@ -81,8 +82,8 @@ func PatchColor(db *sql.DB, colors []structs.Color) (rows *sql.Rows) {
 
 	rows, err := db.Query(fullQuery.String())
 	if err != nil {
-		fmt.Println(fullQuery.String())
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 
 	return

@@ -21,7 +21,12 @@ func GetVisited(db *sql.DB) (jsonBytes []byte, err error) {
 	}
 	defer rows.Close()
 
-	jsonBytes, err = json.Marshal(gnis_idsToVisitedLocationsSlice(rows))
+	locations, err := gnis_idsToVisitedLocationsSlice(rows)
+	if err != nil {
+		return
+	}
+
+	jsonBytes, err = json.Marshal(locations)
 	if err != nil {
 		return
 	}
@@ -57,19 +62,21 @@ func UpdateVisited(db *sql.DB, w http.ResponseWriter, r *http.Request) (jsonByte
 	return
 }
 
-func gnis_idsToVisitedLocationsSlice(rows *sql.Rows) (savedLocations []structs.VisitedLocation) {
+func gnis_idsToVisitedLocationsSlice(rows *sql.Rows) ([]structs.VisitedLocation, error) {
+	var savedLocations []structs.VisitedLocation
 	for rows.Next() {
 		var location structs.VisitedLocation
 		location.Saved = true
 		location.Action = "selected"
 		if err := rows.Scan(&location.GNIS_ID, &location.Color_ID); err != nil {
-			log.Fatal(err)
+			log.Println(err)
+			return nil, err
 		}
 
 		savedLocations = append(savedLocations, location)
 	}
 
-	return
+	return savedLocations, nil
 }
 
 func filterLocationsToSaveAndDelete(visited []structs.VisitedLocation) (locationsToDelete []structs.VisitedLocation, locationsToSave []structs.VisitedLocation, savedIDs []structs.VisitedLocation) {
