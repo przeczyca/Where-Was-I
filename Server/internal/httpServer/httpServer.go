@@ -35,25 +35,44 @@ type ColorHandler struct {
 	db *sql.DB
 }
 
-func InternalServerErrorHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusInternalServerError)
-	w.Write([]byte("500 Internal Server Error"))
+func checkForErrorAndWrite(jsonBytes []byte, err error, w http.ResponseWriter) {
+	if err != nil {
+		InternalServerErrorHandler(w)
+	} else {
+		w.Write(jsonBytes)
+	}
+}
+
+func InternalServerErrorHandler(w http.ResponseWriter) {
+	InternalServerErrorHandlerWithContext(w, "")
+}
+
+func InternalServerErrorHandlerWithContext(w http.ResponseWriter, errorContext string) {
+	newErrorString := "500 Internal Server Error"
+	if len(errorContext) > 0 {
+		newErrorString += ": " + errorContext
+	}
+	http.Error(w, newErrorString, http.StatusInternalServerError)
 }
 
 func (h *VisitedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case r.Method == http.MethodGet:
-		w.Write(api.GetVisited(h.db))
+		jsonBytes, err := api.GetVisited(h.db)
+		checkForErrorAndWrite(jsonBytes, err, w)
 	case r.Method == http.MethodPost:
-		w.Write(api.UpdateVisited(h.db, w, r))
+		jsonBytes, err := api.UpdateVisited(h.db, w, r)
+		checkForErrorAndWrite(jsonBytes, err, w)
 	}
 }
 
 func (h *ColorHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case r.Method == http.MethodGet:
-		w.Write(api.GetColors(h.db))
+		jsonBytes, err := api.GetColors((h.db))
+		checkForErrorAndWrite(jsonBytes, err, w)
 	case r.Method == http.MethodPatch:
-		w.Write(api.PatchColor(h.db, w, r))
+		jsonBytes, err := api.PatchColor(h.db, w, r)
+		checkForErrorAndWrite(jsonBytes, err, w)
 	}
 }
