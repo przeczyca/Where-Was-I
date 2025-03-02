@@ -3,9 +3,7 @@ package postgres
 import (
 	"Where-Was-I-Server/internal/structs"
 	"database/sql"
-	"fmt"
 	"log"
-	"strings"
 )
 
 func GetAllColors(db *sql.DB) (rows *sql.Rows, err error) {
@@ -21,66 +19,96 @@ func GetAllColors(db *sql.DB) (rows *sql.Rows, err error) {
 }
 
 func PatchColor(db *sql.DB, colors []structs.Color) (rows *sql.Rows, err error) {
-	// Filter colors by action
-	var createdColorIds strings.Builder
-	var updatedColorIds strings.Builder
-	var deletedColorIds strings.Builder
+	txn, err := db.Begin()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	defer txn.Rollback()
+
+	newColorsStmt, err := txn.Prepare("INSERT INTO colors (description, hex_value) VALUES ($1, $2)")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	updateColorsStmt, err := txn.Prepare(
+		`UPDATE colors
+		SET description = $2, hex_value = $3
+		WHERE colors.color_id = $1`,
+	)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	deleteColorStmt, err := txn.Prepare(
+		`DELETE FROM colors
+		WHERE color_id = $1`,
+	)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	updateVisitedStmt, err := txn.Prepare(
+		`UPDATE visited_locations SET color_id = 1
+		WHERE color_id = $1`,
+	)
+	if err != nil {
+		log.Println(err)
+		return
+	}
 
 	for _, color := range colors {
 		if color.Action == "created" {
-			if createdColorIds.Len() > 0 {
-				createdColorIds.WriteString(", ")
+			_, err = newColorsStmt.Exec(color.Description, color.HexValue)
+			if err != nil {
+				log.Println(err)
+				return
 			}
-			createdColorIds.WriteString(fmt.Sprintf("('%s', '%s')", color.Description, color.HexValue))
 		} else if color.Action == "updated" {
-			if updatedColorIds.Len() > 0 {
-				updatedColorIds.WriteString(", ")
+			_, err = updateColorsStmt.Exec(color.Color_ID, color.Description, color.HexValue)
+			if err != nil {
+				log.Println(err)
+				return
 			}
-			updatedColorIds.WriteString(fmt.Sprintf("(%v, '%s', '%s')", color.Color_ID, color.Description, color.HexValue))
 		} else if color.Action == "deleted" {
-			if deletedColorIds.Len() > 0 {
-				deletedColorIds.WriteString(", ")
+			_, err = deleteColorStmt.Exec(color.Color_ID)
+			if err != nil {
+				log.Println(err)
+				return
 			}
-			deletedColorIds.WriteString(fmt.Sprintf("('%d')", color.Color_ID))
+			_, err = updateVisitedStmt.Exec(color.Color_ID)
+			if err != nil {
+				log.Println(err)
+				return
+			}
 		}
 	}
 
-	// Add new colors
-	var fullQuery strings.Builder
-
-	if createdColorIds.Len() > 0 {
-		fullQuery.WriteString("INSERT INTO colors (description, hex_value) VALUES " + createdColorIds.String() + ";")
+	err = newColorsStmt.Close()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	err = updateColorsStmt.Close()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	err = deleteColorStmt.Close()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	err = updateVisitedStmt.Close()
+	if err != nil {
+		log.Println(err)
+		return
 	}
 
-	// Updating existing colors
-	if updatedColorIds.Len() > 0 {
-		fullQuery.WriteString(
-			`UPDATE colors 
-			SET description = newColor.newDescription, hex_value = newColor.newHex_value 
-			FROM ( 
-				VALUES ` +
-				updatedColorIds.String() +
-				`) AS newColor(color_id, newDescription, newHex_value) 
-			WHERE colors.color_id = newColor.color_id;`,
-		)
-	}
-
-	if deletedColorIds.Len() > 0 {
-		// Update all selected areas with colors to delete to default color
-		fullQuery.WriteString(
-			`UPDATE visited_locations SET color_id = 1
-			WHERE color_id IN (` + deletedColorIds.String() + `);`,
-		)
-
-		// Delete colors
-
-		fullQuery.WriteString(
-			`DELETE FROM colors
-			WHERE color_id IN (` + deletedColorIds.String() + `);`,
-		)
-	}
-
-	rows, err = db.Query(fullQuery.String())
+	err = txn.Commit()
 	if err != nil {
 		log.Println(err)
 		return
