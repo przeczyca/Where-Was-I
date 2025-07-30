@@ -59,7 +59,7 @@ func InternalServerErrorHandlerWithContext(w http.ResponseWriter, errorContext s
 func (h *VisitedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case r.Method == http.MethodGet:
-		userTracking.SaveIPAddress(h.db, r.RemoteAddr)
+		userTracking.SaveIPAddress(h.db, r)
 		jsonBytes, err := api.GetVisited(h.db)
 		checkForErrorAndWrite(jsonBytes, err, w)
 	case r.Method == http.MethodPost:
